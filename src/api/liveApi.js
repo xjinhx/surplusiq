@@ -44,7 +44,7 @@ async function core() {
   const investedPrincipal = r2(sum(active, (h) => h.principal))
   const cash = {
     asOf: todaySGT(), source: cp.Source, customer: { uen: UEN, name: 'Kopi & Co Pte Ltd' },
-    accounts: (cp.Accounts || []).map((a) => ({ id: a.AccountId, name: `${a.ProductName} ${a.AccountId}`, type: a.ProductName === 'CASA' ? 'CURRENT' : a.ProductName, role: 'OPERATING', currency: a.Currency, balance: Number(a.Balance), source: cp.Source === 'Demo' ? 'Demo' : 'SMUtBank' })),
+    accounts: (cp.Accounts || []).map((a) => ({ id: a.AccountId, name: `${a.ProductName} ${a.AccountId}`, type: a.ProductName === 'CASA' ? 'CURRENT' : a.ProductName, role: 'OPERATING', bankName: a.BankName || 'SMU Bank', currency: a.Currency, balance: Number(a.Balance), source: cp.Source === 'Demo' ? 'Demo' : 'SMUtBank' })),
     totalCash: Number(cp.TotalCash), bankBalance: Number(cp.BankBalance), heldNotTransferred: Number(cp.HeldNotTransferred), buffer, pendingCommitments: Number(sur.PendingCommitments), reservedByProposals: reserved,
     investableSurplus: Number(sur.InvestableSurplus), availableToPropose: Math.max(0, r2(sur.InvestableSurplus - reserved)), investedPrincipal, investedValue: r2(sum(active, (h) => h.currentValue)),
     totalTreasuryAssets: r2(cp.TotalCash + sum(active, (h) => h.currentValue)), bufferCoverage: buffer.effective ? r2(cp.TotalCash / buffer.effective) : null,

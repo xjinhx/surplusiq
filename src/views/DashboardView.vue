@@ -13,7 +13,12 @@ const shown = computed(() => (!d.value ? 0 : view.value === 'avail' ? d.value.wa
 const parts = computed(() => { const [i, f] = Number(shown.value).toFixed(2).split('.'); return { int: i.replace(/\B(?=(\d{3})+(?!\d))/g, ' '), dec: f } })
 const money2 = (n) => Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d)\.)/g, ' ').replace(/(\d)(?=(\d{3})+\.)/g, '$1 ')
 const total = computed(() => (d.value ? d.value.allocation.reduce((a, s) => a + s.value, 0) || 1 : 1))
-const abbr = (a) => String(a.name || 'CA').trim().slice(0, 2).toUpperCase()
+// One tile per bank (SMU Bank until the cash service returns BankName per account).
+const banks = computed(() => {
+  const m = new Map()
+  for (const a of d.value ? d.value.cash.accounts : []) { const n = a.bankName || 'SMU Bank'; m.set(n, (m.get(n) || 0) + a.balance) }
+  return [...m].map(([name, total]) => ({ name, total, initials: name.split(' ')[0].slice(0, 4).toUpperCase() }))
+})
 </script>
 
 <template>
@@ -29,7 +34,7 @@ const abbr = (a) => String(a.name || 'CA').trim().slice(0, 2).toUpperCase()
           <div class="amt-big">{{ parts.int }}<span class="dec">.{{ parts.dec }}</span></div>
           <div class="caption">{{ view === 'avail' ? 'Cash free to invest, in' : 'Current cash in' }} <span class="chip">SGD</span></div>
           <p class="small muted" style="margin-top:12px">Buffer {{ money(d.waterfall.operatingBuffer) }}<template v-if="d.waterfall.pendingCommitments"> · commitments {{ money(d.waterfall.pendingCommitments) }}</template></p>
-          <div class="tiles"><span v-for="a in d.cash.accounts" :key="a.id" class="tile" :title="a.name">{{ abbr(a) }}</span><span class="tile more">tBank</span></div>
+          <div class="tiles"><span v-for="b in banks" :key="b.name" class="tile" :title="`${b.name}: ${money(b.total)}`">{{ b.initials }}</span></div>
         </div>
         <div class="card">
           <div class="card-h"><h2>Cash projection</h2><span class="small muted">Lowest {{ money(d.lowestPoint30d.balance) }} · {{ date(d.lowestPoint30d.date) }}</span></div>
@@ -47,10 +52,10 @@ const abbr = (a) => String(a.name || 'CA').trim().slice(0, 2).toUpperCase()
       </div>
 
       <div class="card flush">
-        <div class="t-head"><h2>Bank accounts</h2><span class="sub">{{ d.cash.accounts.length }} account{{ d.cash.accounts.length === 1 ? '' : 's' }} · SMUtBank</span></div>
+        <div class="t-head"><h2>Bank accounts</h2><span class="sub">{{ d.cash.accounts.length }} account{{ d.cash.accounts.length === 1 ? '' : 's' }} · {{ banks.length }} bank{{ banks.length === 1 ? '' : 's' }}</span></div>
         <div class="table-wrap"><table class="bordered">
           <thead><tr><th>Bank</th><th>Account</th><th>Use</th><th class="num">Balance</th></tr></thead>
-          <tbody><tr v-for="a in d.cash.accounts" :key="a.id"><td><span class="brandtile">t</span>tBank</td><td>{{ a.id }}</td><td>{{ a.role === 'OPERATING' ? 'Operating' : 'Settlement' }}</td><td class="num">{{ money2(a.balance) }}<span class="unit">{{ a.currency }}</span></td></tr></tbody></table></div>
+          <tbody><tr v-for="a in d.cash.accounts" :key="a.id"><td><span class="brandtile">{{ (a.bankName || 'SMU Bank').slice(0, 1) }}</span>{{ a.bankName || 'SMU Bank' }}</td><td>{{ a.id }}</td><td>{{ a.role === 'OPERATING' ? 'Operating' : 'Settlement' }}</td><td class="num">{{ money2(a.balance) }}<span class="unit">{{ a.currency }}</span></td></tr></tbody></table></div>
       </div>
 
       <div class="card stats" style="padding:0">

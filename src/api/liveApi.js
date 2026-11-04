@@ -169,7 +169,14 @@ function auditSummary(a) {
   const pid = a.ProposalId ? ` (${propId(a.ProposalId)})` : ''
   if (a.Action === 'REBALANCE_EVALUATE' && d) return d.Shortfall > 0 ? `Rebalancing check: shortfall ${money(d.Shortfall)}, ${(d.Lines || []).length} holding(s) to redeem` : 'Rebalancing check: no shortfall'
   if (a.Action === 'ALERT_SHORTFALL' && d) return `${d.Level} alert: cash ${money(d.Cash)} vs buffer ${money(d.Buffer)}, shortfall ${money(d.Shortfall)}`
-  if (a.Action === 'RECOMMEND_ALLOCATION') return `Allocation recommended. ${a.Detail || ''}`.trim()
+  if (a.Action === 'RECOMMEND_ALLOCATION') {
+    // The service writes "UEN=..; RunId=..; Surplus=..; Term=FD6M 150,000.00; MMF=38,000.00". Keep only what a person needs.
+    const kv = {}; String(a.Detail || '').split(';').forEach((x) => { const [k, ...v] = x.split('='); if (k) kv[k.trim()] = v.join('=').trim() })
+    const amt = (t) => { const m = String(t || '').match(/([\d,]+(?:\.\d+)?)\s*$/); return m ? money(Number(m[1].replace(/,/g, ''))) : null }
+    const parts = [['Term', kv.Term], ['MMF', kv.MMF]].filter(([, v]) => v).map(([k, v]) => `${k === 'MMF' ? 'money market fund' : String(v).split(' ')[0].replace(/^FD(\d+)M$/, '$1-month fixed deposit')} ${amt(v)}`)
+    const sur = amt(kv.Surplus)
+    return sur ? `Recommended investing ${sur}${parts.length ? ': ' + parts.join(' + ') : ''}` : 'Allocation recommended'
+  }
   return `${titleCase(a.Action)}${pid}${a.Detail ? ': ' + a.Detail.slice(0, 160) : ''}`
 }
 const mapAudit = (a) => ({
@@ -255,7 +262,7 @@ export const liveApi = {
     const c = await core(); const s = c.settings
     let rows; let header = null
     if (generate) {
-      header = await post('alloc', 'RecommendAllocation', { UEN })
+      header = await post('alloc', 'RecommendAllocation', { UEN, UserId: me().userId })
       rows = (header.Lines || []).map((l) => ({ RunId: header.RunId, ProductCode: l.ProductCode, Amount: l.Amount, IndicativeRate: l.Rate, TenorMonths: l.TenorMonths, ProjectedReturn: l.ProjectedReturn, Reason: l.Reason, CreatedOn: new Date().toISOString() }))
     } else rows = await get('rec', 'GetLatestRecommendation', { UEN })
     const runId = rows[0] ? rows[0].RunId : (header && header.RunId) || null
@@ -365,7 +372,7 @@ export const liveApi = {
   },
 
   async getDashboard() {
-    const [c, hold, alerts, fc, audit, rec, pend] = await Promise.all([core(), this.getHoldings(), this.getAlerts({ status: 'ACTIVE' }), latestWeeks(), this.getAuditLog({ limit: 6 }), this.recommendAllocation({}), this.getProposals({ status: 'PENDING_APPROVAL' })])
+    const [c, hold, alerts, fc, audit, rec, pend] = await Promise.all([core(), this.getHoldings(), this.getAlerts({ status: 'ACTIVE' }), latestWeeks(), this.getAuditLog({ limit: 20 }), this.recommendAllocation({}), this.getProposals({ status: 'PENDING_APPROVAL' })])
     const act = hold.holdings.filter((h) => h.status === 'ACTIVE'); const cash = c.cash
     const typeLabel = { MONEY_MARKET_FUND: 'Money market fund', FIXED_DEPOSIT: 'Fixed deposit', T_BILL: 'T-bill', BOND_FUND: 'Bond fund' }
     const byType = act.reduce((m, h) => { m[h.productType] = (m[h.productType] || 0) + h.currentValue; return m }, {})

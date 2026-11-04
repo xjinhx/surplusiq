@@ -4,13 +4,13 @@ import { api } from '../api/index.js'
 import { useLoad } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
 import Badge from '../components/Badge.vue'
-import { dateTime, titleCase, ROLE_LABEL } from '../utils/format.js'
+import { dateTime, titleCase, ROLE_LABEL, eventTone } from '../utils/format.js'
 
 const flt = reactive({ q: '', event: '', actorId: '', from: '', to: '' })
 const { data: d, loading, error, reload } = useLoad(() => api.getAuditLog({ ...flt }))
 let t; watch(flt, () => { clearTimeout(t); t = setTimeout(reload, 250) })
 const open = ref(null)
-const tone = (e) => (/FAILED|REJECTED|RAISED/.test(e) ? 'red' : /APPROVED|SUCCEEDED|RESOLVED|CREATED/.test(e) ? 'green' : /SUBMITTED|RECOMMENDATION/.test(e) ? 'blue' : /SIMULATED/.test(e) ? 'sim' : 'grey')
+const tone = eventTone
 function exportCsv() {
   const rows = [['Timestamp', 'Event', 'Actor', 'Role', 'Entity', 'Entity ID', 'Summary']].concat(d.value.events.map((e) => [e.ts, e.event, e.actor.name, e.actor.role, e.entityType, e.entityId, e.summary]))
   const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')

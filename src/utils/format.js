@@ -21,3 +21,6 @@ export const STATUS_TONE = {
   CRITICAL: 'red', WARNING: 'amber', INFO: 'blue', PASS: 'green', WARN: 'amber', FAIL: 'red',
   LOW: 'green', VERY_LOW: 'green', MEDIUM: 'amber', HIGH: 'red',
 }
+
+export const eventTone = (e) => (/FAILED|REJECTED|RAISED|SHORTFALL/.test(e) ? 'red' : /APPROVED|SUCCEEDED|RESOLVED|CREATED/.test(e) ? 'green' : /SUBMITTED|RECOMMEND/.test(e) ? 'blue' : /REBALANCE/.test(e) ? 'grey' : /SIMULATED/.test(e) ? 'sim' : 'grey')
+export const eventLabel = (e) => ({ REBALANCE_EVALUATE: 'Liquidity check', RECOMMEND_ALLOCATION: 'Recommendation' }[e] || titleCase(e))

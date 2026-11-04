@@ -38,7 +38,7 @@ async function submit() {
   busy.value = true
   const r = await act(() => api.submitProposal({ type: f.type, productId: f.productId, holdingId: f.holdingId, amount: f.amount, notes: f.notes }), (p) => p.status === 'EXECUTED' ? `${p.id} executed (simulated)` : `${p.id} sent to a Director for approval`)
   busy.value = false
-  if (r) { f.amount = null; f.notes = ''; router.replace({ path: '/invest/propose' }); if (r.status === 'PENDING_APPROVAL') router.push('/approvals') }
+  if (r) { f.amount = null; f.notes = ''; router.replace({ path: '/propose' }); if (r.status === 'PENDING_APPROVAL') router.push('/approvals') }
 }
 const setMax = () => { f.amount = f.type === 'INVEST' ? ref0.value.cash.availableToPropose : holding.value?.principal }
 const mine = computed(() => (ref0.value?.mine || []).slice(0, 8))

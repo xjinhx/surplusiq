@@ -4,10 +4,21 @@ import { api } from '../api/index.js'
 import { useLoad } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
 import LineChart from '../components/LineChart.vue'
-import { money, date, dateTime, pct } from '../utils/format.js'
+import Badge from '../components/Badge.vue'
+import { money, date, dateTime, pct, eventTone, eventLabel, ROLE_LABEL } from '../utils/format.js'
 
 const { data: d, loading, error } = useLoad(() => api.getDashboard())
 const view = ref('avail')
+// Repeated identical entries (for example several liquidity checks) collapse into one row with a count.
+const activity = computed(() => {
+  const out = []
+  for (const e of d.value?.recentActivity || []) {
+    const last = out[out.length - 1]
+    if (last && last.summary === e.summary && last.event === e.event && last.actor.id === e.actor.id) last.count++
+    else out.push({ ...e, count: 1 })
+  }
+  return out.slice(0, 5)
+})
 const shown = computed(() => (!d.value ? 0 : view.value === 'avail' ? d.value.waterfall.investableSurplus : d.value.waterfall.totalCash))
 // "188 100" + small ".00", like a statement
 const parts = computed(() => { const [i, f] = Number(shown.value).toFixed(2).split('.'); return { int: i.replace(/\B(?=(\d{3})+(?!\d))/g, ' '), dec: f } })
@@ -70,7 +81,7 @@ const banks = computed(() => {
           <div v-if="!d.upcomingMaturities.length" class="empty">No term holdings yet.</div>
           <table v-else class="bordered"><tbody><tr v-for="m in d.upcomingMaturities" :key="m.holdingId"><td><b>{{ m.productName }}</b><br /><span class="muted small">{{ date(m.maturityDate) }} · in {{ m.daysToMaturity }} days</span></td><td class="num">{{ money(m.principal) }}<br /><span class="small" style="color:var(--pos)">+{{ money(m.projectedReturn) }}</span></td></tr></tbody></table></div>
         <div class="card flush"><div class="t-head"><h2>Recent activity</h2><router-link class="small" to="/audit" style="margin-left:auto">Audit history</router-link></div>
-          <table><tbody><tr v-for="e in d.recentActivity" :key="e.id"><td class="small">{{ e.summary }}<br /><span class="muted">{{ dateTime(e.ts) }} · {{ e.actor.name }}</span></td></tr></tbody></table></div>
+          <table><tbody><tr v-for="e in activity" :key="e.id"><td class="small"><Badge :tone="eventTone(e.event)" :label="eventLabel(e.event)" /> <b v-if="e.count > 1">x{{ e.count }}</b><br />{{ e.summary }}<br /><span class="muted">{{ dateTime(e.ts) }} · {{ e.actor.name }}<template v-if="e.actor.role !== 'SYSTEM'">, {{ ROLE_LABEL[e.actor.role] }}</template></span></td></tr></tbody></table></div>
       </div>
     </div>
   </PageState>

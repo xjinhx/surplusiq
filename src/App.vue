@@ -29,8 +29,8 @@ const toggleNav = () => {
 const menuOpen = ref(false)
 const menuRef = ref(null)
 const creates = [
-  ['New investment', 'Propose putting surplus cash to work', { path: '/invest/propose' }],
-  ['New redemption', 'Propose taking money out of a holding', { path: '/invest/propose', query: { type: 'REDEEM' } }],
+  ['New investment', 'Propose putting surplus cash to work', { path: '/propose' }],
+  ['New redemption', 'Propose taking money out of a holding', { path: '/propose', query: { type: 'REDEEM' } }],
   ['Add commitment', 'Record a known payment or receipt', { path: '/forecast', query: { focus: 'commitment' } }],
   ['Generate recommendation', 'Run a fresh allocation recommendation', { path: '/invest/recommended', query: { action: 'generate' } }],
   ['Check liquidity', 'Check cash against the buffer now', { path: '/activity/alerts', query: { action: 'check' } }],

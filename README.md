@@ -21,3 +21,9 @@ npm run dev     # http://localhost:5173
 Copy `.env.example` to `.env` to change the UEN, proxy target, demo user ids or approval decision strings.
 Submitting, approving, generating a recommendation, recalculating the forecast and checking liquidity write to the shared dev database.
 Rates are illustrative and returns are never guaranteed.
+
+## Deploy on Vercel
+
+`vercel.json` builds the app with Vite and rewrites `/siq/*` to the OutSystems host, so the browser never calls it directly and no CORS headers are needed (same job as the dev proxy in `vite.config.js`).
+Import the repo at vercel.com/new, keep the detected Vite preset and deploy. Optional environment variables: `VITE_UEN`, `VITE_USER_MAKER`, `VITE_USER_DIRECTOR`, `VITE_DECISION_APPROVE`, `VITE_DECISION_REJECT` (defaults are in `.env.example`).
+If the OutSystems host changes, update the destination in `vercel.json` and `VITE_API_TARGET`.

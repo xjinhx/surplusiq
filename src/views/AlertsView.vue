@@ -22,7 +22,7 @@ const showResolved = ref(false)
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Buffer &amp; liquidity alerts</h1><p>Raised automatically whenever actual or forecast cash drops below the operating buffer. Resolved when the position recovers.</p></div><button class="btn primary" :disabled="checking" @click="check">{{ checking ? 'Checking...' : 'Check liquidity' }}</button></div>
+  <div class="page-head"><div><h1>Buffer &amp; liquidity alerts</h1></div><button class="btn primary" :disabled="checking" @click="check">{{ checking ? 'Checking...' : 'Check liquidity' }}</button></div>
   <PageState :loading="loading" :error="error" :ready="!!d">
     <div v-if="d" class="stack">
       <div v-if="!d.active.alerts.length" class="banner green"><div><b>All clear</b>Cash covers the operating buffer and commitments.</div></div>
@@ -32,7 +32,7 @@ const showResolved = ref(false)
       </div>
 
       <div class="card flush"><div style="padding:20px 24px 0"><div class="row"><h2 style="margin:0">Recommended liquidity actions</h2><Badge :tone="d.active.rebalancing.status === 'SHORTFALL' ? 'red' : 'green'" :label="titleCase(d.active.rebalancing.status)" /></div>
-        <p class="muted small" style="margin-top:6px">Cash {{ money(d.active.rebalancing.cash) }} vs required {{ money(d.active.rebalancing.buffer + d.active.rebalancing.pendingCommitments) }}. Holdings are ranked by how quickly and cheaply they turn back into cash.</p></div>
+        <p class="small" style="margin-top:6px">Cash {{ money(d.active.rebalancing.cash) }} vs required {{ money(d.active.rebalancing.buffer + d.active.rebalancing.pendingCommitments) }}.</p></div>
         <div class="table-wrap"><table><tbody><tr v-for="x in d.active.rebalancing.actions" :key="x.id">
           <td style="width:140px"><Badge :tone="actTone[x.action]" :label="titleCase(x.action)" /></td>
           <td><b>{{ x.productName || 'Treasury' }}</b><br /><span class="small">{{ x.reason }}</span><br /><span v-if="x.estimatedSettlement" class="small muted">Settlement: {{ x.estimatedSettlement }}</span><span v-if="x.penaltyNote" class="small" style="color:var(--amber)"> · {{ x.penaltyNote }}</span></td>

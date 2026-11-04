@@ -29,7 +29,7 @@ const saveCtl = () => act(() => api.updateTreasuryControls({ ...ctl }), 'Treasur
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Approvals</h1><p>Maker-checker: finance staff propose, a different Director approves. Every decision is logged.</p></div></div>
+  <div class="page-head"><div><h1>Approvals</h1></div></div>
   <PageState :loading="loading" :error="error" :ready="!!d">
     <div v-if="d">
       <div class="tabs"><button :class="{ on: tab === 'pending' }" @click="tab = 'pending'">Pending ({{ d.pending.length }})</button><button :class="{ on: tab === 'history' }" @click="tab = 'history'">History</button><button :class="{ on: tab === 'controls' }" @click="tab = 'controls'">Approval rules &amp; risk limits</button></div>
@@ -45,7 +45,7 @@ const saveCtl = () => act(() => api.updateTreasuryControls({ ...ctl }), 'Treasur
             <div><h3>Validation at submission</h3><Checks :checks="p.checks" /></div>
             <div><h3>Liquidity impact</h3><dl class="kv"><dt>Cash before</dt><dd>{{ money(p.impact.cashBefore) }}</dd><dt>Cash after</dt><dd>{{ money(p.impact.cashAfter) }}</dd><dt>Operating buffer</dt><dd>{{ money(p.impact.buffer) }}</dd><dt>Headroom after</dt><dd :style="{ color: p.impact.headroomAfter < 0 ? 'var(--red)' : '' }">{{ money(p.impact.headroomAfter) }}</dd>
               <dt>{{ p.type === 'INVEST' ? 'Projected return' : 'Interest realised' }}</dt><dd>{{ p.type === 'INVEST' ? '+' + money(p.projectedReturn, true) : money(p.impact.realisedInterest, true) }}</dd></dl>
-              <p class="hint" style="margin-top:6px">Indicative only - returns are not guaranteed. Execution will be simulated.</p></div>
+              </div>
             <div><h3>Why</h3><p class="small">{{ p.engineReason || p.notes || 'Manual proposal - no engine rationale attached.' }}</p><p v-if="p.engineReason && p.notes" class="small muted">Note: {{ p.notes }}</p></div>
           </div>
           <div class="divider"></div>

@@ -51,7 +51,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Cash forecast</h1><p>Built from the last 3 months of transactions plus the commitments you tell us about.</p></div><button class="btn" :disabled="refreshing" @click="recalc">{{ refreshing ? 'Recalculating...' : 'Recalculate forecast' }}</button></div>
+  <div class="page-head"><div><h1>Cash forecast</h1></div><button class="btn" :disabled="refreshing" @click="recalc">{{ refreshing ? 'Recalculating...' : 'Recalculate forecast' }}</button></div>
   <PageState :loading="loading" :error="error" :ready="!!f">
     <div v-if="f" class="stack">
       <div class="grid g3">
@@ -68,7 +68,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
       </div>
 
       <div class="grid g-main">
-        <div class="card flush"><div style="padding:20px 24px 0"><h2>Detected recurring &amp; one-off expenses</h2><p class="muted small">Rules-based classification (AI can later refine this). Fixed = same amount, once a month.</p></div>
+        <div class="card flush"><div style="padding:20px 24px 0"><h2>Detected recurring &amp; one-off expenses</h2><p class="muted small">Fixed = same amount every month.</p></div>
           <div class="table-wrap"><table><thead><tr><th>Payee</th><th>Category</th><th>Pattern</th><th class="num">Expected / month</th></tr></thead>
             <tbody><tr v-for="g in f.forecast.recurringItems" :key="g.counterparty"><td><b>{{ g.counterparty }}</b><br /><span class="muted small">{{ g.type === 'FIXED' ? `usually day ${g.dayOfMonth}` : g.type === 'ONE_OFF' ? `${g.monthsPresent} of 3 months - spread over 3` : 'varies each month' }}</span></td><td>{{ g.category }}</td><td><Badge :tone="typeTone[g.type]" :label="TYPE_LABEL[g.type]" /></td><td class="num">{{ money(g.expectedMonthly) }}</td></tr></tbody></table></div></div>
 
@@ -81,7 +81,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
               <div class="grid g2"><div class="field"><label>Category</label><select v-model="form.category"><option v-for="c in CATS" :key="c">{{ c }}</option></select></div>
                 <div class="field"><label>Direction</label><select v-model="form.direction"><option value="OUTFLOW">Payment (outflow)</option><option value="INFLOW">Receipt (inflow)</option></select></div></div>
               <button class="btn primary" :disabled="saving">Add commitment</button>
-              <p class="hint" style="margin-top:8px">Outflows due within 90 days reduce investable surplus. Added as {{ currentUser.name }}.</p>
+              <p class="hint" style="margin-top:8px">Payments due within 90 days reduce the surplus.</p>
             </form></div>
         </div>
       </div>

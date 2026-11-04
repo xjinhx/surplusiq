@@ -45,7 +45,7 @@ const mine = computed(() => (ref0.value?.mine || []).slice(0, 8))
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Propose investment</h1><p>Submit an investment or redemption. Checks run live; the approval route depends on the amount and the Director-set policy.</p></div></div>
+  <div class="page-head"><div><h1>Propose investment</h1></div></div>
   <PageState :loading="loading" :error="error" :ready="!!ref0">
     <div v-if="ref0" class="stack">
       <div class="grid g-main">
@@ -77,8 +77,7 @@ const mine = computed(() => (ref0.value?.mine || []).slice(0, 8))
             <p class="small muted" style="margin-top:8px">{{ v.approval.reason }}.</p>
             <dl v-if="v.impact.cashAfter != null" class="kv" style="margin-top:8px"><dt>Cash before</dt><dd>{{ money(v.impact.cashBefore) }}</dd><dt>Cash after</dt><dd>{{ money(v.impact.cashAfter) }}</dd><dt>Headroom over buffer</dt><dd :style="{ color: v.impact.headroomAfter < 0 ? 'var(--red)' : '' }">{{ money(v.impact.headroomAfter) }}</dd>
               <template v-if="f.type === 'INVEST'"><dt>Projected return</dt><dd style="color:var(--green)">+{{ money(v.impact.projectedReturn, true) }}</dd></template>
-              <template v-else><dt>Interest realised</dt><dd>{{ money(v.impact.realisedInterest, true) }}</dd></template></dl>
-            <p class="hint" style="margin-top:8px">Execution is simulated; indicative returns are not guaranteed.</p></div>
+              <template v-else><dt>Interest realised</dt><dd>{{ money(v.impact.realisedInterest, true) }}</dd></template></dl></div>
         </div>
       </div>
 

@@ -40,7 +40,7 @@ const wf = computed(() => d.value && d.value.rec.waterfall)
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Allocation recommendations</h1><p>A transparent, rules-based liquidity-first allocation. Nothing is executed until it goes through the approval rules.</p></div>
+  <div class="page-head"><div><h1>Allocation recommendations</h1></div>
     <div v-if="d" class="row"><button class="btn primary" :disabled="generating" @click="generate">{{ generating ? 'Generating...' : 'Generate recommendation' }}</button></div></div>
   <PageState :loading="loading" :error="error" :ready="!!d">
     <div v-if="d" class="stack">
@@ -63,7 +63,7 @@ const wf = computed(() => d.value && d.value.rec.waterfall)
                 <div class="facts"><span>Rate <b>{{ pct(l.rate) }}</b></span><span>Share of surplus <b>{{ pct(l.pctOfSurplus, 1) }}</b></span><span>Projected return <b style="color:var(--pos)">+{{ money(l.projectedReturn, true) }}</b> {{ l.projectedReturnBasis }}</span></div></div>
               <div class="amt">{{ money(l.amount) }}</div>
             </div>
-            <p class="why">{{ l.reason }}</p>
+            <details class="why-box"><summary>Why this?</summary><p class="why">{{ l.reason }}</p></details>
           </div>
           <div class="total-row">
             <span class="small muted"><template v-if="d.rec.totals.baselineReturn">Vs about {{ money(d.rec.totals.baselineReturn, true) }} if left in the current account over {{ d.rec.totals.horizonMonths }} months. </template>Total {{ money(wf.allocated) }} at {{ pct(d.rec.totals.blendedRate) }} blended, +{{ money(d.rec.totals.projectedReturn, true) }} projected. Indicative only, not guaranteed.</span>
@@ -75,8 +75,7 @@ const wf = computed(() => d.value && d.value.rec.waterfall)
           <ul class="checks"><li v-for="x in d.rec.excluded" :key="x.productId"><span class="dot WARN" style="background:#9fb0b0">–</span><span><b>{{ x.productName }}</b><br /><span class="muted small">{{ x.reason }}</span></span></li></ul></template></div>
       </div>
 
-      <div class="card flush"><div style="padding:20px 24px 0"><h2>Rebalancing check <Badge :tone="d.reb.status === 'SHORTFALL' ? 'red' : d.reb.status === 'IDLE_SURPLUS' ? 'amber' : 'green'" :label="titleCase(d.reb.status)" /></h2>
-        <p class="muted small">Compares today's cash position and holdings with the rules and proposes maintain / reduce / redeem / invest.</p></div>
+      <div class="card flush"><div style="padding:20px 24px 0"><h2>Rebalancing check <Badge :tone="d.reb.status === 'SHORTFALL' ? 'red' : d.reb.status === 'IDLE_SURPLUS' ? 'amber' : 'green'" :label="titleCase(d.reb.status)" /></h2></div>
         <div class="table-wrap"><table><tbody><tr v-for="a in d.reb.actions" :key="a.id"><td style="width:140px"><Badge :tone="actionTone[a.action]" :label="titleCase(a.action)" /></td>
           <td><b v-if="a.productName">{{ a.productName }}</b><b v-else>Treasury</b><br /><span class="small">{{ a.reason }}</span><br /><span v-if="a.penaltyNote" class="small" style="color:var(--amber)">{{ a.penaltyNote }}</span></td>
           <td class="num"><b v-if="a.amount">{{ money(a.amount) }}</b></td>
@@ -89,7 +88,6 @@ const wf = computed(() => d.value && d.value.rec.waterfall)
     <p class="muted">Each line becomes its own proposal and follows the approval rules.</p>
     <table><tbody><tr v-for="p in previews" :key="p.line.productId"><td><b>{{ p.line.productName }}</b></td><td class="num">{{ money(p.line.amount) }}</td>
       <td><Badge :tone="p.v.approval.required ? 'amber' : 'green'" :label="p.v.approval.required ? 'Director approval' : 'Direct execution'" /><br /><span class="small muted">{{ p.v.approval.reason }}</span></td><td><span v-if="!p.v.valid" class="small" style="color:var(--red)">Fails checks</span></td></tr></tbody></table>
-    <p class="hint" style="margin-top:10px">Execution is simulated in this prototype and holdings are labelled accordingly.</p>
     <template #actions><button class="btn" @click="confirm = false">Cancel</button><button class="btn green" :disabled="busy || previews.some((p) => !p.v.valid)" @click="submitAll">{{ busy ? 'Submitting...' : 'Submit proposals' }}</button></template>
   </Modal>
 </template>

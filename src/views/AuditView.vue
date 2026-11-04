@@ -19,7 +19,7 @@ function exportCsv() {
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Audit history</h1><p>Every recommendation, proposal change, approval, execution attempt and outcome - with who, when and why.</p></div><button class="btn" :disabled="!d" @click="exportCsv">Export CSV</button></div>
+  <div class="page-head"><div><h1>Audit history</h1></div><button class="btn" :disabled="!d" @click="exportCsv">Export CSV</button></div>
   <div class="card row wrap" style="margin-bottom:16px">
     <input v-model="flt.q" style="max-width:260px" placeholder="Search summary, ID, person..." />
     <select v-model="flt.event" style="width:auto"><option value="">All events</option><option v-for="e in d?.eventTypes || []" :key="e" :value="e">{{ titleCase(e) }}</option></select>

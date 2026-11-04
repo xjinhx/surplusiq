@@ -24,17 +24,17 @@ function onMove(e) {
 </script>
 <template>
   <svg :viewBox="`0 0 ${W} ${height}`" width="100%" @mousemove="onMove" @mouseleave="hover = null" style="display:block">
-    <g v-for="t in ticks" :key="t"><line :x1="padL" :x2="W - padR" :y1="y(t)" :y2="y(t)" stroke="#eceef5" /><text :x="padL - 8" :y="y(t) + 4" text-anchor="end" font-size="11" fill="#8a8da6">{{ compact(t) }}</text></g>
+    <g v-for="t in ticks" :key="t"><line :x1="padL" :x2="W - padR" :y1="y(t)" :y2="y(t)" stroke="#eceef5" /><text :x="padL - 8" :y="y(t) + 4" text-anchor="end" font-size="12" fill="#4b5068">{{ compact(t) }}</text></g>
     <defs><linearGradient id="lcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4c6ef5" stop-opacity=".28" /><stop offset="100%" stop-color="#4c6ef5" stop-opacity="0" /></linearGradient></defs>
     <path :d="area" fill="url(#lcFill)" />
-    <line v-if="buffer != null" :x1="padL" :x2="W - padR" :y1="y(buffer)" :y2="y(buffer)" stroke="#8a8da6" stroke-dasharray="4 4" />
-    <text v-if="buffer != null" :x="W - padR" :y="y(buffer) - 5" text-anchor="end" font-size="11" fill="#8a8da6">Operating buffer {{ compact(buffer) }}</text>
+    <line v-if="buffer != null" :x1="padL" :x2="W - padR" :y1="y(buffer)" :y2="y(buffer)" stroke="#4b5068" stroke-dasharray="4 4" />
+    <text v-if="buffer != null" :x="W - padR" :y="y(buffer) - 5" text-anchor="end" font-size="12" fill="#4b5068">Operating buffer {{ compact(buffer) }}</text>
     <path :d="path" fill="none" stroke="#4c6ef5" stroke-width="2" stroke-linejoin="round" />
-    <text v-for="i in xTicks" :key="i" :x="x(i)" :y="height - 4" :text-anchor="i === points.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'" font-size="11" fill="#8a8da6">{{ fmtDate(points[i].date).slice(0, -5) }}</text>
+    <text v-for="i in xTicks" :key="i" :x="x(i)" :y="height - 4" :text-anchor="i === points.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'" font-size="12" fill="#4b5068">{{ fmtDate(points[i].date).slice(0, -5) }}</text>
     <g v-if="hover != null && points[hover]">
       <line :x1="x(hover)" :x2="x(hover)" :y1="padT" :y2="height - padB" stroke="#b6beba" />
       <circle :cx="x(hover)" :cy="y(points[hover].balance)" r="4" fill="#4c6ef5" />
-      <g :transform="`translate(${Math.min(x(hover) + 8, W - 150)},${padT + 4})`"><rect width="140" height="38" rx="2" fill="#1f2030" /><text x="8" y="16" font-size="11" fill="#b6beba">{{ fmtDate(points[hover].date) }}</text><text x="8" y="31" font-size="13" font-weight="700" fill="#fff">{{ compact(points[hover].balance) }}</text></g>
+      <g :transform="`translate(${Math.min(x(hover) + 8, W - 150)},${padT + 4})`"><rect width="140" height="38" rx="2" fill="#1f2030" /><text x="8" y="16" font-size="12" fill="#b6beba">{{ fmtDate(points[hover].date) }}</text><text x="8" y="31" font-size="13" font-weight="700" fill="#fff">{{ compact(points[hover].balance) }}</text></g>
     </g>
   </svg>
 </template>

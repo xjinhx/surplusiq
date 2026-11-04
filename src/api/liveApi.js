@@ -202,7 +202,7 @@ export const liveApi = {
       avgMonthlyOutflow: c.cash.buffer.avgMonthlyOutflow, avgMonthlyInflow: a.avgMonthlyInflow, expectedMonthlyOutflow: r2(sum(a.groups, (g) => g.expectedMonthly)), recurringItems: a.groups,
       projection: weeks.map((w) => ({ date: w.WeekStart, inflow: w.Inflow, outflow: w.Outflow, commitments: 0, balance: w.ClosingBalance, buffer })), monthlyForecast: [],
       lowestPoint30d: low ? { date: low.WeekStart, balance: low.ClosingBalance } : { date: todaySGT(), balance: c.cash.totalCash },
-      assumptions: { commitmentWindowDays: c.settings.PendingWindowDays, method: 'SIQ_Forecast: weekly 13-week roll-forward from today\'s cash using recurring items from the latest month, background spend and one-off commitments. History table is analysed from SeedTransaction.' },
+      assumptions: { commitmentWindowDays: c.settings.PendingWindowDays, method: 'Weekly steps from today\'s cash using recurring costs and known commitments.' },
     }
   },
 
@@ -282,7 +282,7 @@ export const liveApi = {
       lines, excluded: [], steps,
       totals: { projectedReturn, blendedRate: allocated ? r2(sum(lines, (l) => l.amount * l.rate) / allocated) : 0, baselineReturn: 0, uplift: projectedReturn, horizonMonths: horizon },
       message: lines.length ? (header && header.Message) || null : runId ? 'The latest run recommended nothing (surplus below the invest trigger).' : 'No recommendation has been generated yet. Press "Generate recommendation".',
-      disclaimer: 'Illustrative, indicative rates. Projected returns are estimates, not guarantees. Decision support only - not investment advice.',
+      disclaimer: 'Rates are illustrative. Returns are indicative, not guaranteed.',
     }
   },
 

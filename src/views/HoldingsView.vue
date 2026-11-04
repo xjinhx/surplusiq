@@ -13,7 +13,7 @@ const closed = computed(() => (d.value?.holdings || []).filter((h) => h.status !
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Holdings &amp; returns</h1><p>Positions, maturities, accrued and projected returns. Positions made through the prototype are labelled <Badge tone="sim" label="Simulated" />.</p></div></div>
+  <div class="page-head"><div><h1>Holdings &amp; returns</h1></div></div>
   <PageState :loading="loading" :error="error" :ready="!!d">
     <div v-if="d" class="stack">
       <div class="grid g4">
@@ -36,7 +36,7 @@ const closed = computed(() => (d.value?.holdings || []).filter((h) => h.status !
       <div v-if="closed.length" class="card flush"><div class="row spread" style="padding:20px 24px"><h2 style="margin:0">Closed holdings ({{ closed.length }})</h2><button class="btn sm" @click="showClosed = !showClosed">{{ showClosed ? 'Hide' : 'Show' }}</button></div>
         <div v-if="showClosed" class="table-wrap"><table><thead><tr><th>Holding</th><th class="num">Original principal</th><th class="num">Realised return</th><th>Closed</th></tr></thead>
           <tbody><tr v-for="h in closed" :key="h.id"><td><b>{{ h.productName }}</b> <Badge v-if="h.simulated" tone="sim" label="Simulated" /><br /><span class="muted small">{{ h.id }}</span></td><td class="num">{{ money(h.originalPrincipal) }}</td><td class="num">{{ money(h.realisedReturn, true) }}</td><td>{{ h.closedAt && date(h.closedAt.slice(0, 10)) }}</td></tr></tbody></table></div></div>
-      <p class="hint">Rates are illustrative. Projected returns use simple interest (principal × rate × tenor). Actual returns depend on product terms, fees and market conditions.</p>
+      <p class="hint">Projected return = principal × rate × tenor. Not guaranteed.</p>
     </div>
   </PageState>
 </template>

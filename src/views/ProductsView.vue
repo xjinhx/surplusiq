@@ -13,7 +13,7 @@ const shown = computed(() => (products.value || []).filter((p) => filter.value =
 </script>
 
 <template>
-  <div class="page-head"><div><h1>Product catalogue</h1><p>Instruments SurplusIQ may recommend. Rates are <b>illustrative</b>, not live market prices, and returns are never guaranteed.</p></div>
+  <div class="page-head"><div><h1>Product catalogue</h1></div>
     <div class="seg"><button v-for="[k, l] in types" :key="k" :class="{ on: filter === k }" @click="filter = k">{{ l }}</button></div></div>
   <PageState :loading="loading" :error="error" :ready="!!products">
     <div v-if="products" class="card flush"><div class="table-wrap"><table>
@@ -27,6 +27,5 @@ const shown = computed(() => (products.value || []).filter((p) => filter.value =
         <td><Badge :value="p.riskClass" /><br /><span v-if="!p.eligibleForPreference" class="small muted">Above risk preference</span></td>
         <td><Badge :tone="p.approved ? 'green' : 'grey'" :label="p.approved ? 'Approved' : 'Not approved'" /><br /><span v-if="p.heldValue" class="small muted">{{ money(p.heldValue) }} held</span></td>
         <td class="right"><router-link v-if="p.approved && p.eligibleForPreference" class="btn sm primary" :to="{ path: '/propose', query: { productId: p.id } }">Propose</router-link></td></tr></tbody></table></div></div>
-    <p class="hint" style="margin-top:12px">Products come from the InvestmentProduct service in OutSystems. Rates are illustrative, not market prices.</p>
   </PageState>
 </template>

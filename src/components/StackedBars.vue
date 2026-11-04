@@ -14,10 +14,10 @@ const stack = (g) => { let acc = 0; return g.parts.map((p) => { const y = props.
 <template>
   <div>
     <svg :viewBox="`0 0 ${W} ${height}`" width="100%" style="display:block">
-      <g v-for="t in [0, .25, .5, .75, 1]" :key="t"><line :x1="padL" :x2="W" :y1="height - padB - h(t * max)" :y2="height - padB - h(t * max)" stroke="#eceef5" /><text :x="padL - 6" :y="height - padB - h(t * max) + 4" text-anchor="end" font-size="11" fill="#8a8da6">{{ compact(t * max) }}</text></g>
+      <g v-for="t in [0, .25, .5, .75, 1]" :key="t"><line :x1="padL" :x2="W" :y1="height - padB - h(t * max)" :y2="height - padB - h(t * max)" stroke="#eceef5" /><text :x="padL - 6" :y="height - padB - h(t * max) + 4" text-anchor="end" font-size="12" fill="#4b5068">{{ compact(t * max) }}</text></g>
       <g v-for="(g, i) in groups" :key="g.label">
         <rect v-for="p in stack(g)" :key="p.key" :x="gx(i) - bw / 2" :y="p.y" :width="bw" :height="Math.max(0, p.hh)" :fill="p.color"><title>{{ g.label }} - {{ p.label }}: {{ compact(p.value) }}</title></rect>
-        <text :x="gx(i)" :y="height - 7" text-anchor="middle" font-size="11" fill="#8a8da6">{{ g.label }}</text>
+        <text :x="gx(i)" :y="height - 7" text-anchor="middle" font-size="12" fill="#4b5068">{{ g.label }}</text>
       </g>
     </svg>
     <div class="legend"><span v-for="l in legend" :key="l.key"><i :style="{ background: l.color }"></i>{{ l.label }}</span></div>

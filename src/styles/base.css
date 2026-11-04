@@ -151,11 +151,6 @@ pre.json { background: var(--ink); color: #d7e6df; padding: var(--s3); border-ra
 .toast { background: var(--ink); color: #fff; padding: var(--s3) var(--s4); border-radius: 10px; max-width: 380px; border-left: 4px solid var(--accent); box-shadow: 0 10px 30px rgba(20,33,28,.25); }
 .toast.red { border-color: var(--alert); } .toast.amber { border-color: var(--warn); }
 
-/* demo controls: plain, not part of the product */
-.demo { position: fixed; left: 264px; bottom: var(--s4); z-index: 40; }
-.demo .pill { background: var(--card); color: var(--muted); border: 1px dashed var(--rule-strong); border-radius: 8px; padding: var(--s1) var(--s3); cursor: pointer; font: inherit; font-size: 13px; }
-.demo .pop { position: absolute; bottom: 40px; left: 0; width: 320px; background: var(--card); border: 1px solid var(--rule-strong); border-radius: 12px; padding: var(--s4); box-shadow: 0 12px 30px rgba(20,33,28,.15); }
-@media (max-width: 860px) { .demo { left: var(--s4); } }
 .spinner { padding: var(--s8); text-align: center; color: var(--muted); }
 svg text { font-family: var(--font); }
 
@@ -194,7 +189,6 @@ svg text { font-family: var(--font); }
 .shell.collapsed .nav a { justify-content: center; padding-left: 0; padding-right: 0; position: relative; }
 .shell.collapsed .nav .count { position: absolute; top: 2px; right: 6px; margin: 0; padding: 0 5px; line-height: 16px; font-size: 11px; }
 .shell.collapsed .nav hr { margin-left: var(--s2); margin-right: var(--s2); }
-.shell.collapsed .demo { left: 88px; }
 @media (max-width: 860px) { .shell.collapsed { grid-template-columns: 1fr; } .shell.collapsed .lbl { display: inline; } }
 
 /* Create new... menu */

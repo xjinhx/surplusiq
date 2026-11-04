@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Icon from './components/Icon.vue'
-import DemoPanel from './components/DemoPanel.vue'
 import { app, currentUser, loadShell } from './composables/useApp.js'
 import { session, setUser } from './api/session.js'
 import { UEN } from './api/live/config.js'
@@ -44,26 +43,15 @@ const profileRef = ref(null)
 const initials = (n) => String(n || '?').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 const pick = (id) => { setUser(id); profileOpen.value = false }
 
-// Demo controls are hidden unless the address has ?demo=1 (either before or after the #). ?demo=0 hides them again.
-const readDemo = () => {
-  const q = new URLSearchParams(location.search).get('demo') ?? route.query.demo
-  try {
-    if (q === '1') sessionStorage.setItem('siq.demo', '1')
-    else if (q === '0') sessionStorage.removeItem('siq.demo')
-    return sessionStorage.getItem('siq.demo') === '1'
-  } catch { return q === '1' }
-}
-const demo = ref(false)
-
 const outside = (e) => {
   if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target)) menuOpen.value = false
   if (profileOpen.value && profileRef.value && !profileRef.value.contains(e.target)) profileOpen.value = false
 }
 const esc = (e) => { if (e.key === 'Escape') { menuOpen.value = false; profileOpen.value = false } }
-onMounted(() => { demo.value = readDemo(); loadShell(); document.addEventListener('click', outside); document.addEventListener('keydown', esc) })
+onMounted(() => { loadShell(); document.addEventListener('click', outside); document.addEventListener('keydown', esc) })
 onBeforeUnmount(() => { document.removeEventListener('click', outside); document.removeEventListener('keydown', esc) })
 watch(() => app.version, loadShell)
-watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = false; demo.value = readDemo() })
+watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = false })
 </script>
 
 <template>
@@ -113,7 +101,6 @@ watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = 
       </header>
       <main class="page"><router-view /></main>
     </div>
-    <DemoPanel v-if="demo" />
     <div class="toasts"><div v-for="t in app.toasts" :key="t.id" class="toast" :class="t.tone">{{ t.message }}</div></div>
   </div>
 </template>

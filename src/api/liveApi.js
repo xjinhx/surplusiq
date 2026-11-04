@@ -382,20 +382,6 @@ export const liveApi = {
       recentActivity: audit.events, recommendationPreview: { lines: rec.lines.map((l) => ({ productName: l.productName, amount: l.amount })), projectedReturn: rec.totals.projectedReturn },
     }
   },
-
-  // Demo controls. The real tBank balance is not touched: the "payment" is a large one-off commitment due next week,
-  // which is what the forecast docs suggest for showing a cash crunch.
-  async simulateSupplierPayment({ amount = 60000, supplier = 'Alpine Equipment Supplies' } = {}) {
-    const id = await post('commitment', 'CreateCashCommitment', null, { UEN, Name: `Unexpected supplier payment - ${supplier} (DEMO)`, Amount: Number(amount), Direction: 'Out', DueDate: addDays(todaySGT(), 7), IsRecurring: false, Frequency: '', CreatedBy: me().userId })
-    await refreshForecast()
-    return { commitmentId: id, cashPosition: (await core()).cash }
-  },
-  async resetDemo() {
-    const rows = await get('commitment', 'GetCashCommitments', { UEN })
-    for (const c of rows.filter((x) => /\(DEMO\)/.test(x.Name))) await put('commitment', 'UpdateCashCommitment', { ...c, IsActive: false })
-    await refreshForecast()
-    return { ok: true, note: 'Demo commitments removed. Proposals, holdings and audit rows already written to the live database are not deleted (the API has no delete methods).' }
-  },
 }
 
 async function deactivateCommitment(id, status) {

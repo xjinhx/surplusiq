@@ -24,7 +24,6 @@ target `VITE_API_TARGET`). A deployed build needs a reverse proxy at `/siq` too.
 | Holdings | Holding.GetHoldings + InvestmentProduct.GetProducts | no |
 | Alerts `getAlerts` | passive: cash position + latest forecast low point. **Check liquidity** -> CashPosition.CheckBufferAlert (also the redemption plan). Past alerts: AuditLog.GetAuditLog?ActionPrefix=ALERT_ | only on Check liquidity |
 | Audit `getAuditLog` | AuditLog.GetAuditLog (latest 200, filtered in the browser) | no |
-| Demo "supplier payment" | CashCommitment.CreateCashCommitment (one-off Out, due in 7 days, named `(DEMO)`) + ForecastCashFlow | yes |
 
 Page loads never write. The services that save a run on every call (RecommendAllocation, ForecastCashFlow,
 EvaluateRebalancing, CheckBufferAlert) are behind buttons, as their docs advise.

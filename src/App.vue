@@ -37,12 +37,22 @@ const creates = [
   ['Check liquidity', 'Check cash against the buffer now', { path: '/alerts', query: { action: 'check' } }],
 ]
 const go = (to) => { menuOpen.value = false; router.push(to) }
-const outside = (e) => { if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target)) menuOpen.value = false }
-const esc = (e) => { if (e.key === 'Escape') menuOpen.value = false }
+
+// Profile switcher at the bottom of the sidebar.
+const profileOpen = ref(false)
+const profileRef = ref(null)
+const initials = (n) => String(n || '?').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+const pick = (id) => { setUser(id); profileOpen.value = false }
+
+const outside = (e) => {
+  if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target)) menuOpen.value = false
+  if (profileOpen.value && profileRef.value && !profileRef.value.contains(e.target)) profileOpen.value = false
+}
+const esc = (e) => { if (e.key === 'Escape') { menuOpen.value = false; profileOpen.value = false } }
 onMounted(() => { loadShell(); document.addEventListener('click', outside); document.addEventListener('keydown', esc) })
 onBeforeUnmount(() => { document.removeEventListener('click', outside); document.removeEventListener('keydown', esc) })
 watch(() => app.version, loadShell)
-watch(() => route.fullPath, () => { menuOpen.value = false })
+watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = false })
 </script>
 
 <template>
@@ -60,7 +70,20 @@ watch(() => route.fullPath, () => { menuOpen.value = false })
           <span v-if="to === '/alerts' && app.nav.alerts" class="count">{{ app.nav.alerts }}</span>
         </router-link>
       </nav>
-      <div class="foot">Treasury decision support. Rates are illustrative; returns are never guaranteed. Investment execution is simulated unless a live integration is connected.</div>
+
+      <div ref="profileRef" class="profile">
+        <div v-if="profileOpen" class="profile-menu" role="menu">
+          <div class="menu-head">Switch user</div>
+          <button v-for="u in app.users" :key="u.id" type="button" role="menuitem" class="menu-item" :class="{ on: u.id === session.userId }" @click="pick(u.id)">
+            <b>{{ u.name }}</b><span>{{ ROLE_LABEL[u.role] }}</span>
+          </button>
+        </div>
+        <button class="profile-btn" type="button" aria-haspopup="menu" :aria-expanded="profileOpen" :title="currentUser.name" @click.stop="profileOpen = !profileOpen">
+          <span class="avatar">{{ initials(currentUser.name) }}</span>
+          <span class="who lbl"><b>{{ currentUser.name }}</b><small>{{ ROLE_LABEL[currentUser.role] }}</small></span>
+          <svg class="lbl" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15l5-5 5 5" /></svg>
+        </button>
+      </div>
     </aside>
     <div class="main">
       <header class="top">
@@ -70,16 +93,10 @@ watch(() => route.fullPath, () => { menuOpen.value = false })
         <span class="topbar-title">{{ title }}</span>
         <span class="muted small">Kopi &amp; Co Pte Ltd · UEN {{ UEN }} · {{ date(app.asOf) }}</span>
         <div class="grow"></div>
-        <div class="row">
-          <div class="small right"><b>{{ currentUser.name }}</b><br /><span class="muted">{{ ROLE_LABEL[currentUser.role] }}</span></div>
-          <select style="width:auto" :value="session.userId" @change="setUser($event.target.value)" aria-label="Switch user">
-            <option v-for="u in app.users" :key="u.id" :value="u.id">{{ u.name }} - {{ u.role === 'DIRECTOR' ? 'Director' : 'Finance' }}</option>
-          </select>
-          <div ref="menuRef" class="menu-wrap">
-            <button class="btn dark" type="button" aria-haspopup="menu" :aria-expanded="menuOpen" @click.stop="menuOpen = !menuOpen">Create new... <span aria-hidden="true">▾</span></button>
-            <div v-if="menuOpen" class="menu" role="menu">
-              <button v-for="[label, hint, to] in creates" :key="label" type="button" role="menuitem" class="menu-item" @click="go(to)"><b>{{ label }}</b><span>{{ hint }}</span></button>
-            </div>
+        <div ref="menuRef" class="menu-wrap">
+          <button class="btn dark" type="button" aria-haspopup="menu" :aria-expanded="menuOpen" @click.stop="menuOpen = !menuOpen">Create new... <span aria-hidden="true">▾</span></button>
+          <div v-if="menuOpen" class="menu" role="menu">
+            <button v-for="[label, hint, to] in creates" :key="label" type="button" role="menuitem" class="menu-item" @click="go(to)"><b>{{ label }}</b><span>{{ hint }}</span></button>
           </div>
         </div>
       </header>

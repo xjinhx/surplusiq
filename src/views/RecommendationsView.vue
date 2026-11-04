@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api/index.js'
 import { useLoad, act, isDirector } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
@@ -9,6 +9,7 @@ import Modal from '../components/Modal.vue'
 import { money, pct, titleCase, dateTime } from '../utils/format.js'
 
 const router = useRouter()
+const route = useRoute()
 const { data: d, loading, error } = useLoad(async () => {
   const [rec, reb] = await Promise.all([api.recommendAllocation(), api.evaluateRebalancing()])
   return { rec, reb }
@@ -16,6 +17,7 @@ const { data: d, loading, error } = useLoad(async () => {
 
 const generating = ref(false)
 const generate = async () => { generating.value = true; await act(() => api.recommendAllocation({ generate: true }), 'New recommendation generated'); generating.value = false }
+onMounted(() => { if (route.query.action === 'generate') { router.replace({ path: '/recommendations' }); generate() } })
 const confirm = ref(false); const busy = ref(false); const previews = ref([])
 async function openConfirm() {
   const rec = d.value.rec

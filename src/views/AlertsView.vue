@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api/index.js'
 import { useLoad, toast, errMsg } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
@@ -12,6 +13,9 @@ async function check() {
   checking.value = true
   try { const active = await api.getAlerts({ status: 'ACTIVE', check: true }); d.value = { ...d.value, active }; toast(active.rebalancing.message || 'Liquidity checked') } catch (e) { toast(errMsg(e), 'red') } finally { checking.value = false }
 }
+const route = useRoute()
+const router = useRouter()
+onMounted(() => { if (route.query.action === 'check') { router.replace({ path: '/alerts' }); check() } })
 const tone = { CRITICAL: 'red', WARNING: 'amber', INFO: 'blue' }
 const actTone = { REDEEM: 'red', REDUCE: 'amber', INVEST: 'green', MAINTAIN: 'grey', ROLLOVER_REVIEW: 'blue', ESCALATE: 'red' }
 const showResolved = ref(false)

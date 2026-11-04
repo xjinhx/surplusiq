@@ -1,5 +1,6 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from '../api/index.js'
 import { useLoad, act, isDirector, currentUser } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
@@ -9,6 +10,11 @@ import LineChart from '../components/LineChart.vue'
 import StackedBars from '../components/StackedBars.vue'
 import { money, date, monthLabel, titleCase } from '../utils/format.js'
 
+const route = useRoute()
+onMounted(() => {
+  if (route.query.focus !== 'commitment') return
+  setTimeout(() => { const el = document.getElementById('commitment-form'); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const i = el.querySelector('input'); if (i) i.focus() } }, 900)
+})
 const refreshing = ref(false)
 const { data: f, loading, error } = useLoad(async () => {
   const [forecast, commitments, buffer] = await Promise.all([api.forecastCashFlow({ days: 90 }), api.getCashCommitments(), api.getBufferSettings()])
@@ -67,7 +73,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
             <tbody><tr v-for="g in f.forecast.recurringItems" :key="g.counterparty"><td><b>{{ g.counterparty }}</b><br /><span class="muted small">{{ g.type === 'FIXED' ? `usually day ${g.dayOfMonth}` : g.type === 'ONE_OFF' ? `${g.monthsPresent} of 3 months - spread over 3` : 'varies each month' }}</span></td><td>{{ g.category }}</td><td><Badge :tone="typeTone[g.type]" :label="TYPE_LABEL[g.type]" /></td><td class="num">{{ money(g.expectedMonthly) }}</td></tr></tbody></table></div></div>
 
         <div class="stack">
-          <div class="card"><h2>Add a known commitment</h2>
+          <div id="commitment-form" class="card"><h2>Add a known commitment</h2>
             <form @submit.prevent="add">
               <div class="field"><label>Description</label><input v-model="form.description" required placeholder="e.g. GST payment (quarter ended 31 Dec)" /></div>
               <div class="grid g2"><div class="field"><label>Amount (S$)</label><input v-model.number="form.amount" type="number" min="1" step="0.01" required /></div>

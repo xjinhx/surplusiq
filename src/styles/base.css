@@ -27,7 +27,7 @@ a { color: var(--accent); text-decoration: none; font-weight: 500; } a:hover { t
 .brand .logo { width: 14px; height: 14px; background: var(--accent); border-radius: 4px; font-size: 0; }
 .nav a { display: flex; align-items: center; gap: var(--s3); padding: 10px var(--s3); color: var(--muted); font-weight: 500; border-radius: 8px; }
 .nav a:hover { background: var(--hover); color: var(--ink); text-decoration: none; }
-.nav a svg { color: #9a9db3; } .nav a.router-link-exact-active { color: var(--ink); font-weight: 600; } .nav a.router-link-exact-active svg { color: var(--accent); }
+.nav a svg { color: #9a9db3; } .nav a.router-link-exact-active, .nav a.router-link-active:not([href="#/"]) { color: var(--ink); font-weight: 600; } .nav a.router-link-exact-active svg, .nav a.router-link-active:not([href="#/"]) svg { color: var(--accent); }
 .nav hr { border: 0; border-top: 1px solid var(--rule); margin: var(--s3) var(--s3); }
 .nav .count { margin-left: auto; background: var(--ink); color: #fff; font-size: 12px; border-radius: 10px; padding: 0 var(--s2); font-weight: 600; line-height: 20px; }
 .nav .count.amber { background: var(--warn-soft); color: var(--warn); }
@@ -218,3 +218,10 @@ svg text { font-family: var(--font); }
 .why-box summary::before { content: '+'; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-soft); font-size: 14px; line-height: 1; }
 .why-box[open] summary::before { content: '2'; }
 .why-box .why { margin-top: var(--s2); }
+
+.bar-stack{display:flex;gap:2px;height:28px;border-radius:8px;overflow:hidden;margin:12px 0}
+.hbar{margin:10px 0}.hbar .hl{display:flex;justify-content:space-between;font-size:14px;color:#1f2030;margin-bottom:4px}
+.hbar .track{height:14px;background:#eef0f7;border-radius:6px;overflow:hidden}.hbar .track>div{height:100%;border-radius:6px}
+
+.tab-row{display:inline-flex;margin-bottom:20px}.tab-row a{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:#40455a;text-decoration:none}.tab-row a.on{background:#fff;color:#1f2030;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs-page .page-head h1{display:none}.tabs-page .page-head{justify-content:flex-end;min-height:0}

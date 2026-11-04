@@ -15,7 +15,7 @@ async function check() {
 }
 const route = useRoute()
 const router = useRouter()
-onMounted(() => { if (route.query.action === 'check') { router.replace({ path: '/alerts' }); check() } })
+onMounted(() => { if (route.query.action === 'check') { router.replace({ path: '/activity/alerts' }); check() } })
 const tone = { CRITICAL: 'red', WARNING: 'amber', INFO: 'blue' }
 const actTone = { REDEEM: 'red', REDUCE: 'amber', INVEST: 'green', MAINTAIN: 'grey', ROLLOVER_REVIEW: 'blue', ESCALATE: 'red' }
 const showResolved = ref(false)

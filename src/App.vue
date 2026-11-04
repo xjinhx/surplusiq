@@ -8,10 +8,10 @@ import { UEN } from './api/live/config.js'
 import { ROLE_LABEL, date } from './utils/format.js'
 
 const main = [
-  ['/', 'Dashboard', 'dashboard'], ['/forecast', 'Cash forecast', 'forecast'], ['/products', 'Products', 'products'],
-  ['/recommendations', 'Recommendations', 'recommend'], ['/propose', 'Propose investment', 'propose'], ['/approvals', 'Approvals', 'approvals'], ['/holdings', 'Holdings', 'holdings'],
+  ['/', 'Dashboard', 'dashboard'], ['/forecast', 'Cash forecast', 'forecast'], ['/invest', 'Invest', 'recommend'],
+  ['/approvals', 'Approvals', 'approvals'], ['/holdings', 'Holdings', 'holdings'],
 ]
-const more = [['/alerts', 'Alerts', 'alerts'], ['/audit', 'Audit history', 'audit']]
+const more = [['/activity', 'Activity', 'alerts']]
 const route = useRoute()
 const router = useRouter()
 const title = computed(() => [...main, ...more].find(([to]) => to === route.path)?.[1] || 'SurplusIQ')
@@ -29,11 +29,11 @@ const toggleNav = () => {
 const menuOpen = ref(false)
 const menuRef = ref(null)
 const creates = [
-  ['New investment', 'Propose putting surplus cash to work', { path: '/propose' }],
-  ['New redemption', 'Propose taking money out of a holding', { path: '/propose', query: { type: 'REDEEM' } }],
+  ['New investment', 'Propose putting surplus cash to work', { path: '/invest/propose' }],
+  ['New redemption', 'Propose taking money out of a holding', { path: '/invest/propose', query: { type: 'REDEEM' } }],
   ['Add commitment', 'Record a known payment or receipt', { path: '/forecast', query: { focus: 'commitment' } }],
-  ['Generate recommendation', 'Run a fresh allocation recommendation', { path: '/recommendations', query: { action: 'generate' } }],
-  ['Check liquidity', 'Check cash against the buffer now', { path: '/alerts', query: { action: 'check' } }],
+  ['Generate recommendation', 'Run a fresh allocation recommendation', { path: '/invest/recommended', query: { action: 'generate' } }],
+  ['Check liquidity', 'Check cash against the buffer now', { path: '/activity/alerts', query: { action: 'check' } }],
 ]
 const go = (to) => { menuOpen.value = false; router.push(to) }
 
@@ -66,7 +66,7 @@ watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = 
         <hr />
         <router-link v-for="[to, label, icon] in more" :key="to" :to="to" :title="label">
           <Icon :name="icon" /> <span class="lbl">{{ label }}</span>
-          <span v-if="to === '/alerts' && app.nav.alerts" class="count">{{ app.nav.alerts }}</span>
+          <span v-if="to === '/activity' && app.nav.alerts" class="count">{{ app.nav.alerts }}</span>
         </router-link>
       </nav>
 

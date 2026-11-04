@@ -184,3 +184,22 @@ svg text { font-family: var(--font); }
 
 .card.flush table th:first-child, .card.flush table td:first-child { padding-left: var(--s6); }
 .card.flush table th:last-child, .card.flush table td:last-child { padding-right: var(--s6); }
+
+/* collapsible sidebar */
+.collapse { cursor: pointer; } .collapse:hover { background: var(--hover); color: var(--ink); } .collapse svg { transition: transform .15s; }
+.shell.collapsed { grid-template-columns: 72px 1fr; }
+.shell.collapsed .side { padding-left: var(--s2); padding-right: var(--s2); }
+.shell.collapsed .lbl, .shell.collapsed .side .foot { display: none; }
+.shell.collapsed .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+.shell.collapsed .nav a { justify-content: center; padding-left: 0; padding-right: 0; position: relative; }
+.shell.collapsed .nav .count { position: absolute; top: 2px; right: 6px; margin: 0; padding: 0 5px; line-height: 16px; font-size: 11px; }
+.shell.collapsed .nav hr { margin-left: var(--s2); margin-right: var(--s2); }
+.shell.collapsed .demo { left: 88px; }
+@media (max-width: 860px) { .shell.collapsed { grid-template-columns: 1fr; } .shell.collapsed .lbl { display: inline; } }
+
+/* Create new... menu */
+.menu-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: calc(100% + 8px); width: 300px; background: var(--card); border: 1px solid var(--rule-strong); border-radius: 12px; padding: var(--s2); box-shadow: 0 12px 30px rgba(31,32,48,.14); z-index: 20; display: flex; flex-direction: column; gap: 2px; }
+.menu-item { font: inherit; text-align: left; background: transparent; border: 0; border-radius: 8px; padding: 10px var(--s3); cursor: pointer; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
+.menu-item span { font-size: 13px; color: var(--muted); }
+.menu-item:hover, .menu-item:focus-visible { background: var(--accent-soft); outline: none; }

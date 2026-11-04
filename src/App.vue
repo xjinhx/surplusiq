@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Icon from './components/Icon.vue'
 import DemoPanel from './components/DemoPanel.vue'
 import { app, currentUser, loadShell } from './composables/useApp.js'
@@ -14,23 +14,49 @@ const main = [
 ]
 const more = [['/alerts', 'Alerts', 'alerts'], ['/audit', 'Audit history', 'audit']]
 const route = useRoute()
+const router = useRouter()
 const title = computed(() => [...main, ...more].find(([to]) => to === route.path)?.[1] || 'SurplusIQ')
-onMounted(loadShell)
+
+// Sidebar collapse, remembered per browser.
+let saved = false
+try { saved = localStorage.getItem('siq.nav') === 'collapsed' } catch { /* private mode */ }
+const collapsed = ref(saved)
+const toggleNav = () => {
+  collapsed.value = !collapsed.value
+  try { localStorage.setItem('siq.nav', collapsed.value ? 'collapsed' : 'open') } catch { /* ignore */ }
+}
+
+// "Create new..." menu.
+const menuOpen = ref(false)
+const menuRef = ref(null)
+const creates = [
+  ['New investment', 'Propose putting surplus cash to work', { path: '/propose' }],
+  ['New redemption', 'Propose taking money out of a holding', { path: '/propose', query: { type: 'REDEEM' } }],
+  ['Add commitment', 'Record a known payment or receipt', { path: '/forecast', query: { focus: 'commitment' } }],
+  ['Generate recommendation', 'Run a fresh allocation recommendation', { path: '/recommendations', query: { action: 'generate' } }],
+  ['Check liquidity', 'Check cash against the buffer now', { path: '/alerts', query: { action: 'check' } }],
+]
+const go = (to) => { menuOpen.value = false; router.push(to) }
+const outside = (e) => { if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target)) menuOpen.value = false }
+const esc = (e) => { if (e.key === 'Escape') menuOpen.value = false }
+onMounted(() => { loadShell(); document.addEventListener('click', outside); document.addEventListener('keydown', esc) })
+onBeforeUnmount(() => { document.removeEventListener('click', outside); document.removeEventListener('keydown', esc) })
 watch(() => app.version, loadShell)
+watch(() => route.fullPath, () => { menuOpen.value = false })
 </script>
 
 <template>
-  <div class="shell">
+  <div class="shell" :class="{ collapsed }">
     <aside class="side">
-      <div class="brand"><span class="logo">S</span> SurplusIQ</div>
+      <div class="brand"><span class="logo">S</span> <span class="lbl">SurplusIQ</span></div>
       <nav class="nav stack gap-s" style="gap:2px">
-        <router-link v-for="[to, label, icon] in main" :key="to" :to="to">
-          <Icon :name="icon" /> {{ label }}
+        <router-link v-for="[to, label, icon] in main" :key="to" :to="to" :title="label">
+          <Icon :name="icon" /> <span class="lbl">{{ label }}</span>
           <span v-if="to === '/approvals' && app.nav.approvals" class="count amber">{{ app.nav.approvals }}</span>
         </router-link>
         <hr />
-        <router-link v-for="[to, label, icon] in more" :key="to" :to="to">
-          <Icon :name="icon" /> {{ label }}
+        <router-link v-for="[to, label, icon] in more" :key="to" :to="to" :title="label">
+          <Icon :name="icon" /> <span class="lbl">{{ label }}</span>
           <span v-if="to === '/alerts' && app.nav.alerts" class="count">{{ app.nav.alerts }}</span>
         </router-link>
       </nav>
@@ -38,7 +64,9 @@ watch(() => app.version, loadShell)
     </aside>
     <div class="main">
       <header class="top">
-        <span class="collapse" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg></span>
+        <button class="collapse" type="button" :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'" @click="toggleNav">
+          <svg :style="{ transform: collapsed ? 'rotate(180deg)' : 'none' }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
         <span class="topbar-title">{{ title }}</span>
         <span class="muted small">Kopi &amp; Co Pte Ltd · UEN {{ UEN }} · {{ date(app.asOf) }}</span>
         <div class="grow"></div>
@@ -47,7 +75,12 @@ watch(() => app.version, loadShell)
           <select style="width:auto" :value="session.userId" @change="setUser($event.target.value)" aria-label="Switch user">
             <option v-for="u in app.users" :key="u.id" :value="u.id">{{ u.name }} - {{ u.role === 'DIRECTOR' ? 'Director' : 'Finance' }}</option>
           </select>
-          <router-link class="btn dark" to="/propose">Create new...</router-link>
+          <div ref="menuRef" class="menu-wrap">
+            <button class="btn dark" type="button" aria-haspopup="menu" :aria-expanded="menuOpen" @click.stop="menuOpen = !menuOpen">Create new... <span aria-hidden="true">▾</span></button>
+            <div v-if="menuOpen" class="menu" role="menu">
+              <button v-for="[label, hint, to] in creates" :key="label" type="button" role="menuitem" class="menu-item" @click="go(to)"><b>{{ label }}</b><span>{{ hint }}</span></button>
+            </div>
+          </div>
         </div>
       </header>
       <main class="page"><router-view /></main>

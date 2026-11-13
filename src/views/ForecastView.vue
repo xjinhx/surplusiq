@@ -2,7 +2,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api/index.js'
-import { useLoad, act, isDirector, currentUser } from '../composables/useApp.js'
+import { useLoad, act, errMsg, isDirector, currentUser } from '../composables/useApp.js'
 import PageState from '../components/PageState.vue'
 import Badge from '../components/Badge.vue'
 import Modal from '../components/Modal.vue'
@@ -27,7 +27,7 @@ async function recalc() {
 }
 
 const CATS = ['Tax - GST', 'Rent', 'Payroll - Salaries', 'Suppliers - COGS', 'Equipment', 'Marketing', 'Insurance', 'Revenue - Catering', 'Other']
-const blank = () => ({ description: '', category: 'Tax - GST', direction: 'OUTFLOW', amount: null, dueDate: '', notes: '' })
+const blank = () => ({ description: '', category: 'Tax - GST', direction: 'OUTFLOW', amount: null, dueDate: '', notes: '', payeeAccountId: '' })
 const form = reactive(blank())
 const saving = ref(false)
 async function add() {
@@ -38,6 +38,19 @@ async function add() {
 }
 const setStatus = (c, status) => act(() => api.updateCommitment({ id: c.id, status }), `Marked ${status.toLowerCase()}`)
 const remove = (c) => act(() => api.deleteCommitment({ id: c.id }), 'Commitment removed')
+
+// Pay a one-off payment through SIQ_Payment: dry run first (nothing moves), real transfer only on confirm.
+const pay = reactive({ open: false, c: null, preview: null, busy: false })
+async function openPay(c) {
+  Object.assign(pay, { open: true, c, preview: null, busy: true })
+  try { pay.preview = await api.payCommitment({ id: c.id, dryRun: true }) } catch (e) { pay.preview = { ok: false, message: errMsg(e) } } finally { pay.busy = false }
+}
+async function confirmPay() {
+  pay.busy = true
+  const r = await act(() => api.payCommitment({ id: pay.c.id, dryRun: false }), (x) => `Paid ${money(x.amount, true)} · tBank ref ${x.tbankRef}${x.belowBuffer ? ` · cash now ${money(x.shortfall)} below the buffer` : ''}`)
+  pay.busy = false
+  if (r) pay.open = false
+}
 
 const showBuf = ref(false); const bf = reactive({ months: 3, override: null, reason: '' })
 function openBuf() { bf.months = f.value.buffer.bufferMonths; bf.override = f.value.buffer.override; bf.reason = f.value.buffer.overrideReason || ''; showBuf.value = true }
@@ -80,6 +93,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
                 <div class="field"><label>Due date</label><input v-model="form.dueDate" type="date" required /></div></div>
               <div class="grid g2"><div class="field"><label>Category</label><select v-model="form.category"><option v-for="c in CATS" :key="c">{{ c }}</option></select></div>
                 <div class="field"><label>Direction</label><select v-model="form.direction"><option value="OUTFLOW">Payment (outflow)</option><option value="INFLOW">Receipt (inflow)</option></select></div></div>
+              <div v-if="form.direction === 'OUTFLOW'" class="field"><label>Payee tBank account (optional)</label><input v-model="form.payeeAccountId" maxlength="30" placeholder="Empty = Bean Supply 0000006786" /></div>
               <button class="btn primary" :disabled="saving">Add commitment</button>
               <p class="hint" style="margin-top:8px">Payments due within 90 days reduce the surplus.</p>
             </form></div>
@@ -91,7 +105,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
         <div v-else class="table-wrap"><table><thead><tr><th>Description</th><th>Due</th><th>Type</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
           <tbody><tr v-for="c in f.commitments" :key="c.id"><td><b>{{ c.description }}</b><br /><span class="muted small">{{ c.category }} · added by {{ c.createdBy }}</span></td><td>{{ date(c.dueDate) }}</td><td>{{ c.direction === 'OUTFLOW' ? 'Payment' : 'Receipt' }}</td>
             <td class="num" :style="{ color: c.direction === 'INFLOW' ? 'var(--green)' : '' }">{{ c.direction === 'INFLOW' ? '+' : '' }}{{ money(c.amount, true) }}</td><td><Badge :value="c.status" /></td>
-            <td class="right"><button v-if="c.status === 'PENDING'" class="btn sm" @click="setStatus(c, 'PAID')">Mark paid</button> <button class="btn sm danger" @click="remove(c)">Remove</button></td></tr></tbody></table></div></div>
+            <td class="right"><button v-if="c.direction === 'OUTFLOW' && c.oneOff" class="btn sm primary" @click="openPay(c)">Pay</button><button v-else-if="c.status === 'PENDING'" class="btn sm" @click="setStatus(c, 'PAID')">Mark paid</button> <button class="btn sm danger" @click="remove(c)">Remove</button></td></tr></tbody></table></div></div>
     </div>
   </PageState>
 
@@ -100,5 +114,25 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
     <div class="field"><label>Absolute override (S$) - leave blank to use the calculated buffer</label><input v-model.number="bf.override" type="number" min="0" step="1000" placeholder="e.g. 220000" /></div>
     <div class="field"><label>Reason (required for an override)</label><textarea v-model="bf.reason" placeholder="e.g. Renovation planned in Q1"></textarea></div>
     <template #actions><button class="btn" @click="showBuf = false">Cancel</button><button class="btn primary" @click="saveBuf">Save buffer</button></template>
+  </Modal>
+
+  <Modal v-if="pay.open" title="Pay commitment" @close="pay.open = false">
+    <p v-if="!pay.preview" class="hint">Checking the balance and the buffer...</p>
+    <template v-else>
+      <dl class="kv">
+        <dt>Commitment</dt><dd>{{ pay.c.description }}</dd>
+        <dt>Amount</dt><dd>{{ money(pay.c.amount, true) }}</dd>
+        <template v-if="pay.preview.ok">
+          <dt>Pay to (tBank account)</dt><dd>{{ pay.preview.payee }}</dd>
+          <dt>Operating account now</dt><dd>{{ money(pay.preview.balanceBefore, true) }}</dd>
+          <dt>Cash after payment</dt><dd>{{ money(pay.preview.cashAfter) }}</dd>
+          <dt>Operating buffer</dt><dd>{{ money(pay.preview.buffer) }}</dd>
+        </template>
+      </dl>
+      <div v-if="!pay.preview.ok" class="banner red" style="margin-top:12px"><div><b>Cannot pay</b>{{ pay.preview.message }}</div></div>
+      <div v-else-if="pay.preview.belowBuffer" class="banner amber" style="margin-top:12px"><div><b>Cash will fall below the buffer</b>Short by {{ money(pay.preview.shortfall) }}. Use Check liquidity on Alerts afterwards for a redemption plan.</div></div>
+      <p v-if="pay.preview.ok" class="hint" style="margin-top:12px">This moves money in SMU tBank from the operating account and closes the commitment.</p>
+    </template>
+    <template #actions><button class="btn" @click="pay.open = false">Cancel</button><button class="btn primary" :disabled="pay.busy || !pay.preview || !pay.preview.ok" @click="confirmPay">{{ pay.busy && pay.preview ? 'Paying...' : `Pay ${money(pay.c.amount, true)}` }}</button></template>
   </Modal>
 </template>

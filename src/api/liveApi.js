@@ -169,6 +169,8 @@ function auditSummary(a) {
   const pid = a.ProposalId ? ` (${propId(a.ProposalId)})` : ''
   if (a.Action === 'REBALANCE_EVALUATE' && d) return d.Shortfall > 0 ? `Rebalancing check: shortfall ${money(d.Shortfall)}, ${(d.Lines || []).length} holding(s) to redeem` : 'Rebalancing check: no shortfall'
   if (a.Action === 'ALERT_SHORTFALL' && d) return `${d.Level} alert: cash ${money(d.Cash)} vs buffer ${money(d.Buffer)}, shortfall ${money(d.Shortfall)}`
+  if (a.Action === 'PAYMENT' && d) return `Paid ${money(d.Amount, true)} to ${d.PayeeAccountId} for "${d.Name}"${d.BelowBuffer ? ' (cash now below the buffer)' : ''}`
+  if (a.Action === 'PAYMENT_FAILED' && d) return `Payment failed for "${d.Name}": ${d.Error}`
   if (a.Action === 'RECOMMEND_ALLOCATION') {
     // The service writes "UEN=..; RunId=..; Surplus=..; Term=FD6M 150,000.00; MMF=38,000.00". Keep only what a person needs.
     const kv = {}; String(a.Detail || '').split(';').forEach((x) => { const [k, ...v] = x.split('='); if (k) kv[k.trim()] = v.join('=').trim() })
@@ -216,12 +218,25 @@ export const liveApi = {
   async getCashCommitments() { return (await get('commitment', 'GetCashCommitments', { UEN })).map(mapCommitment) },
   async createCommitment(a) {
     if (!a.description || !(Number(a.amount) > 0) || !a.dueDate) throw new ApiError('Description, a positive amount and a due date are required', 'VALIDATION_FAILED')
-    const id = await post('commitment', 'CreateCashCommitment', null, { UEN, Name: a.description, Amount: Number(a.amount), Direction: a.direction === 'INFLOW' ? 'In' : 'Out', DueDate: a.dueDate, IsRecurring: false, Frequency: '', CreatedBy: me().userId })
+    const id = await post('commitment', 'CreateCashCommitment', null, { UEN, Name: a.description, Amount: Number(a.amount), Direction: a.direction === 'INFLOW' ? 'In' : 'Out', DueDate: a.dueDate, IsRecurring: false, Frequency: '', CreatedBy: me().userId, PayeeAccountId: (a.payeeAccountId || '').trim() })
     try { await refreshForecast() } catch { /* best effort */ }
     return { id: `CMT-${String(id).padStart(4, '0')}` }
   },
   async updateCommitment({ id, status }) { return deactivateCommitment(id, status) },
   async deleteCommitment({ id }) { await deactivateCommitment(id); return { id } },
+  // SIQ_Payment.PayCommitment. dryRun: true checks everything and moves nothing; false pays through tBank CreditTransfer
+  // and the service closes the commitment. Business failures come back as Success false (HTTP 200).
+  async payCommitment({ id, dryRun = true }) {
+    const r = await post('payment', 'PayCommitment', { UEN, CommitmentId: idOf(id), UserId: me().userId, DryRun: dryRun })
+    if (!dryRun && !r.Success) throw new ApiError(r.Message || 'Payment failed', 'PAYMENT_FAILED', r)
+    if (!dryRun) { try { await refreshForecast() } catch { /* best effort */ } }
+    return { ok: r.Success, message: r.Message, name: r.CommitmentName, amount: Number(r.Amount), payee: r.PayeeAccountId, tbankRef: r.TbankRef, balanceBefore: Number(r.BalanceBefore), balanceAfter: Number(r.BalanceAfter), cashAfter: Number(r.CashAfter), buffer: Number(r.RequiredBuffer), belowBuffer: !!r.BelowBuffer, shortfall: Number(r.Shortfall) }
+  },
+  // SIQ_Monitor.RunDailyCheck: CheckBufferAlert for every company (same as the daily timer). Writes audit and forecast rows.
+  async runDailyCheck() {
+    const r = await post('monitor', 'RunDailyCheck')
+    return { checkedOn: sgt(r.CheckedOn), checked: r.CheckedCount, failed: r.FailedCount, lines: (r.Lines || []).map((l) => ({ uen: l.UEN, ok: l.Ok, level: l.AlertLevel, message: l.Message })) }
+  },
 
   async getBufferSettings() { const { cash } = await core(); return { ...cash.buffer } },
   async updateBufferSettings({ bufferMonths, override }) {

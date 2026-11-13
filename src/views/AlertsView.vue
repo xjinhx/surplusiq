@@ -19,6 +19,15 @@ onMounted(() => { if (route.query.action === 'check') { router.replace({ path: '
 const tone = { CRITICAL: 'red', WARNING: 'amber', INFO: 'blue' }
 const actTone = { REDEEM: 'red', REDUCE: 'amber', INVEST: 'green', MAINTAIN: 'grey', ROLLOVER_REVIEW: 'blue', ESCALATE: 'red' }
 const showResolved = ref(false)
+
+// SIQ_Monitor: the same check the daily timer runs, for every company. Button only (it writes audit and forecast rows).
+const daily = ref(null)
+const running = ref(false)
+const levelTone = { OK: 'green', Warning: 'amber', Critical: 'red', Failed: 'grey' }
+async function runDaily() {
+  running.value = true
+  try { daily.value = await api.runDailyCheck(); toast(`Daily check: ${daily.value.checked} checked, ${daily.value.failed} failed`) } catch (e) { toast(errMsg(e), 'red') } finally { running.value = false }
+}
 </script>
 
 <template>
@@ -30,6 +39,12 @@ const showResolved = ref(false)
         <div class="grow"><div class="row"><b style="margin:0">{{ a.title }}</b><Badge :value="a.severity" /></div><div>{{ a.message }}</div><div class="small muted" style="margin-top:4px">Raised {{ dateTime(a.raisedAt) }} · {{ a.id }}</div></div>
         <div v-if="a.shortfall" class="right"><div class="small muted">Shortfall</div><div style="font-size:22px;font-weight:700">{{ money(a.shortfall) }}</div></div>
       </div>
+
+      <div class="card"><div class="row spread"><div><h2 style="margin:0">Daily monitor</h2><p class="small muted" style="margin:6px 0 0">Checks every company's cash against its buffer. Scheduled daily at 08:00; run it now to see the result.</p></div>
+          <button class="btn" :disabled="running" @click="runDaily">{{ running ? 'Running...' : 'Run daily check' }}</button></div>
+        <div v-if="daily" style="margin-top:12px"><div class="table-wrap"><table><thead><tr><th>Company</th><th>Level</th><th>Result</th></tr></thead>
+          <tbody><tr v-for="l in daily.lines" :key="l.uen"><td><b>{{ l.uen }}</b></td><td><Badge :tone="levelTone[l.level] || 'grey'" :label="l.level" /></td><td class="small">{{ l.message }}</td></tr></tbody></table></div>
+          <p class="small muted" style="margin-top:8px">Checked {{ dateTime(daily.checkedOn) }} · {{ daily.checked }} checked, {{ daily.failed }} failed</p></div></div>
 
       <div class="card flush"><div style="padding:20px 24px 0"><div class="row"><h2 style="margin:0">Recommended liquidity actions</h2><Badge :tone="d.active.rebalancing.status === 'SHORTFALL' ? 'red' : 'green'" :label="titleCase(d.active.rebalancing.status)" /></div>
         <p class="small" style="margin-top:6px">Cash {{ money(d.active.rebalancing.cash) }} vs required {{ money(d.active.rebalancing.buffer + d.active.rebalancing.pendingCommitments) }}.</p></div>

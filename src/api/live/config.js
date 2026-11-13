@@ -5,9 +5,9 @@ export const UEN = env.VITE_UEN || '202312345K' // Kopi & Co. Use SIQTEST01 for 
 // In dev, Vite proxies /siq -> the OutSystems host (the service sends no CORS headers). See vite.config.js.
 export const BASE = (env.VITE_API_BASE || '/siq').replace(/\/$/, '')
 
-// Demo roles from Jiacheng: 910001 = FinanceStaff, 910002 = Director, currently registered under UEN SIQTEST01 only.
-// For other UENs (Kopi & Co) the role below is used as the fallback; if GetUserRole finds an active row for the
-// id AND the current UEN, its Role and UserName win.
+// Demo roles from Jiacheng: 910001 = FinanceStaff, 910002 = Director, registered under UEN 202312345K (Kopi & Co).
+// If GetUserRole finds no active row for the id AND the current UEN, the role below is used as the fallback;
+// otherwise its Role and UserName win.
 export const USERS = [
   { id: 'u-priya', userId: Number(env.VITE_USER_MAKER || 910001), name: 'Priya Nair', title: 'Finance Executive', role: 'FINANCE_STAFF', email: 'priya@kopiandco.sg' },
   { id: 'u-daniel', userId: Number(env.VITE_USER_DIRECTOR || 910002), name: 'Daniel Lim', title: 'Director', role: 'DIRECTOR', email: 'daniel@kopiandco.sg' },
@@ -23,5 +23,5 @@ export const MODULES = {
   proposal: ['SIQ_Proposal', 'Proposal'], product: ['SIQ_InvestmentProduct', 'InvestmentProduct'],
   rec: ['SIQ_AllocationRecommendation', 'AllocationRecommendation'], seed: ['SIQ_SeedTransaction', 'SeedTransaction'],
   cash: ['SIQ_CashPosition', 'CashPosition'], forecast: ['SIQ_Forecast', 'Forecast'], alloc: ['SIQ_AllocationEngine', 'AllocationAPI'],
-  workflow: ['SIQ_ProposalWorkflow', 'ProposalWorkflow'],
+  workflow: ['SIQ_ProposalWorkflow', 'ProposalWorkflow'], payment: ['SIQ_Payment', 'Payment'], monitor: ['SIQ_Monitor', 'Monitor'],
 }

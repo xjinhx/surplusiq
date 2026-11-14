@@ -1,7 +1,7 @@
 // Live adapter: implements the UI API contract (docs/API_CONTRACT.md) on the real SIQ_* OutSystems REST services.
 // Reads are side-effect free. Writes happen only on explicit user actions (submit, approve, generate, check liquidity...).
 import { get, post, put, ApiError } from './live/http.js'
-import { UEN, USERS, DECISION } from './live/config.js'
+import { UEN, USERS, DECISION, COMPANIES, setUen, companyName } from './live/config.js'
 import { session } from './session.js'
 import { analyseSeed } from './live/analysis.js'
 import {
@@ -43,7 +43,7 @@ async function core() {
   }
   const investedPrincipal = r2(sum(active, (h) => h.principal))
   const cash = {
-    asOf: todaySGT(), source: cp.Source, customer: { uen: UEN, name: 'Kopi & Co Pte Ltd' },
+    asOf: todaySGT(), source: cp.Source, customer: { uen: UEN, name: companyName() },
     accounts: (cp.Accounts || []).map((a) => ({ id: a.AccountId, name: `${a.ProductName} ${a.AccountId}`, type: a.ProductName === 'CASA' ? 'CURRENT' : a.ProductName, role: 'OPERATING', bankName: a.BankName || 'SMU Bank', currency: a.Currency, balance: Number(a.Balance), source: cp.Source === 'Demo' ? 'Demo' : 'SMUtBank' })),
     totalCash: Number(cp.TotalCash), bankBalance: Number(cp.BankBalance), heldNotTransferred: Number(cp.HeldNotTransferred), buffer, pendingCommitments: Number(sur.PendingCommitments), reservedByProposals: reserved,
     investableSurplus: Number(sur.InvestableSurplus), availableToPropose: Math.max(0, r2(sur.InvestableSurplus - reserved)), investedPrincipal, investedValue: r2(sum(active, (h) => h.currentValue)),
@@ -177,6 +177,8 @@ function auditSummary(a) {
     const sur = amt(kv.Surplus)
     return sur ? `Recommended investing ${sur}${parts.length ? ': ' + parts.join(' + ') : ''}` : 'Allocation recommended'
   }
+  if (a.Action === 'PAYMENT' && d) return `Paid ${money(d.Amount, true)} to ${d.PayeeAccountId} for "${d.Name}"${d.BelowBuffer ? ' (cash now below the buffer)' : ''}`
+  if (a.Action === 'PAYMENT_FAILED' && d) return `Payment failed for "${d.Name}": ${d.Error}`
   return `${titleCase(a.Action)}${pid}${a.Detail ? ': ' + a.Detail.slice(0, 160) : ''}`
 }
 const mapAudit = (a) => ({
@@ -186,6 +188,20 @@ const mapAudit = (a) => ({
 
 /* ---------------------------------------------------------------- public API */
 export const liveApi = {
+  // One summary per company. Reads only; the UEN is switched in memory (not saved) while each one loads.
+  async getCompanies() {
+    const prev = UEN; const out = []
+    try {
+      for (const c of COMPANIES) {
+        setUen(c.uen, false)
+        try {
+          const k = await core(); const r = await roleOf(me())
+          out.push({ ...c, ok: true, role: r.role, totalCash: k.cash.totalCash, buffer: k.cash.buffer.effective, available: k.cash.availableToPropose, awaiting: k.cash.reservedByProposals })
+        } catch (e) { out.push({ ...c, ok: false, error: e.message }) }
+      }
+    } finally { setUen(prev, false) }
+    return out
+  },
   async getUsers() { return Promise.all(USERS.map(async (u) => { const r = await roleOf(u); return { id: u.id, name: r.name, title: u.title, role: r.role, email: u.email } })) },
   async getUserRole({ userId } = {}) { const u = USERS.find((x) => x.id === (userId || session.userId)) || USERS[0]; const r = await roleOf(u); return { userId: u.id, name: r.name, role: r.role, uen: UEN, company: 'Kopi & Co Pte Ltd' } },
 
@@ -216,11 +232,23 @@ export const liveApi = {
   async getCashCommitments() { return (await get('commitment', 'GetCashCommitments', { UEN })).map(mapCommitment) },
   async createCommitment(a) {
     if (!a.description || !(Number(a.amount) > 0) || !a.dueDate) throw new ApiError('Description, a positive amount and a due date are required', 'VALIDATION_FAILED')
-    const id = await post('commitment', 'CreateCashCommitment', null, { UEN, Name: a.description, Amount: Number(a.amount), Direction: a.direction === 'INFLOW' ? 'In' : 'Out', DueDate: a.dueDate, IsRecurring: false, Frequency: '', CreatedBy: me().userId })
+    const id = await post('commitment', 'CreateCashCommitment', null, { UEN, Name: a.description, Amount: Number(a.amount), Direction: a.direction === 'INFLOW' ? 'In' : 'Out', DueDate: a.dueDate, IsRecurring: false, Frequency: '', CreatedBy: me().userId, PayeeAccountId: (a.payeeAccountId || '').trim() })
     try { await refreshForecast() } catch { /* best effort */ }
     return { id: `CMT-${String(id).padStart(4, '0')}` }
   },
   async updateCommitment({ id, status }) { return deactivateCommitment(id, status) },
+  // SIQ_Payment.PayCommitment. DryRun=true checks only; DryRun=false moves real tBank money (call only after the user confirms).
+  async payCommitment({ id, dryRun = true }) {
+    const r = await post('payment', 'PayCommitment', { UEN, CommitmentId: idOf(id), UserId: me().userId, DryRun: dryRun })
+    if (!dryRun && !r.Success) throw new ApiError(r.Message || 'Payment failed', 'PAYMENT_FAILED', r)
+    if (!dryRun) { try { await refreshForecast() } catch { /* best effort */ } }
+    return { ok: r.Success, message: r.Message, name: r.CommitmentName, amount: Number(r.Amount), payee: r.PayeeAccountId, tbankRef: r.TbankRef, balanceBefore: Number(r.BalanceBefore), balanceAfter: Number(r.BalanceAfter), cashAfter: Number(r.CashAfter), buffer: Number(r.RequiredBuffer), belowBuffer: !!r.BelowBuffer, shortfall: Number(r.Shortfall) }
+  },
+  // SIQ_Monitor.RunDailyCheck: CheckBufferAlert for every company. Writes an audit row and a forecast snapshot per company, so button only.
+  async runDailyCheck() {
+    const r = await post('monitor', 'RunDailyCheck')
+    return { checkedOn: sgt(r.CheckedOn), checked: r.CheckedCount, failed: r.FailedCount, lines: (r.Lines || []).map((l) => ({ uen: l.UEN, ok: l.Ok, level: l.AlertLevel, message: l.Message })) }
+  },
   async deleteCommitment({ id }) { await deactivateCommitment(id); return { id } },
 
   async getBufferSettings() { const { cash } = await core(); return { ...cash.buffer } },

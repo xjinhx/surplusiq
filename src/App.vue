@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Icon from './components/Icon.vue'
 import { app, currentUser, loadShell } from './composables/useApp.js'
 import { session, setUser } from './api/session.js'
-import { UEN } from './api/live/config.js'
+import { UEN, companyName } from './api/live/config.js'
 import { ROLE_LABEL, date } from './utils/format.js'
 
 const main = [
@@ -55,7 +55,8 @@ watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = 
 </script>
 
 <template>
-  <div class="shell" :class="{ collapsed }">
+  <router-view v-if="route.path === '/companies'" />
+  <div v-else class="shell" :class="{ collapsed }">
     <aside class="side">
       <div class="brand"><span class="logo">S</span> <span class="lbl">SurplusIQ</span></div>
       <nav class="nav stack gap-s" style="gap:2px">
@@ -90,7 +91,7 @@ watch(() => route.fullPath, () => { menuOpen.value = false; profileOpen.value = 
           <svg :style="{ transform: collapsed ? 'rotate(180deg)' : 'none' }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
         </button>
         <span class="topbar-title">{{ title }}</span>
-        <span class="muted small">Kopi &amp; Co Pte Ltd · UEN {{ UEN }} · {{ date(app.asOf) }}</span>
+        <span class="muted small"><router-link class="co-link" to="/companies" title="Switch company">{{ companyName() }} ▾</router-link> · UEN {{ UEN }} · {{ date(app.asOf) }}</span>
         <div class="grow"></div>
         <div ref="menuRef" class="menu-wrap">
           <button class="btn dark" type="button" aria-haspopup="menu" :aria-expanded="menuOpen" @click.stop="menuOpen = !menuOpen">Create new... <span aria-hidden="true">▾</span></button>

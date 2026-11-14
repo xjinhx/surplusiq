@@ -1,7 +1,18 @@
 // Settings for the live (OutSystems) API adapter.
 const env = import.meta.env
 
-export const UEN = env.VITE_UEN || '202312345K' // Kopi & Co. Use SIQTEST01 for write experiments.
+// Companies this user can monitor. A company is a UEN: every service call is scoped to one. To add one, see docs/ADD_COMPANY.md.
+export const COMPANIES = [{ uen: '202312345K', name: 'Kopi & Co Pte Ltd' }]
+const DEFAULT_UEN = env.VITE_UEN || COMPANIES[0].uen // Use SIQTEST01 for write experiments.
+let saved = null
+try { saved = localStorage.getItem('siq.uen') } catch { /* private mode */ }
+// Live binding: modules that import UEN see the new value as soon as setUen runs.
+export let UEN = (saved && COMPANIES.some((c) => c.uen === saved) && saved) || DEFAULT_UEN
+export function setUen(u, persist = true) {
+  UEN = u
+  if (persist) { try { localStorage.setItem('siq.uen', u) } catch { /* ignore */ } }
+}
+export const companyName = (u = UEN) => (COMPANIES.find((c) => c.uen === u) || { name: u }).name
 // In dev, Vite proxies /siq -> the OutSystems host (the service sends no CORS headers). See vite.config.js.
 export const BASE = (env.VITE_API_BASE || '/siq').replace(/\/$/, '')
 
@@ -24,4 +35,5 @@ export const MODULES = {
   rec: ['SIQ_AllocationRecommendation', 'AllocationRecommendation'], seed: ['SIQ_SeedTransaction', 'SeedTransaction'],
   cash: ['SIQ_CashPosition', 'CashPosition'], forecast: ['SIQ_Forecast', 'Forecast'], alloc: ['SIQ_AllocationEngine', 'AllocationAPI'],
   workflow: ['SIQ_ProposalWorkflow', 'ProposalWorkflow'],
+  payment: ['SIQ_Payment', 'Payment'], monitor: ['SIQ_Monitor', 'Monitor'],
 }

@@ -225,3 +225,12 @@ svg text { font-family: var(--font); }
 
 .tab-row{display:inline-flex;margin-bottom:20px}.tab-row a{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:#40455a;text-decoration:none}.tab-row a.on{background:#fff;color:#1f2030;box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .tabs-page .page-head h1{display:none}.tabs-page .page-head{justify-content:flex-end;min-height:0}
+.companies{max-width:1000px;margin:0 auto;padding:48px 24px}.companies h1{margin:0 0 6px}.companies .who{margin:0 0 28px;color:#40455a}
+.co-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.co{text-align:left;font:inherit;cursor:pointer;border:1px solid transparent;display:block;width:100%}.co:hover{border-color:var(--accent)}
+.co-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px}.co-name{font-size:18px}
+.co-cash{display:flex;flex-direction:column;margin-bottom:12px}.co-cash b{font-size:28px;font-weight:600}
+.co-row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-top:1px solid #eceef5;color:#40455a}.co-row b{color:#1f2030}
+.co-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.co-foot .open{color:var(--accent);font-weight:600}
+.top .co-link{color:inherit;text-decoration:none}.top .co-link:hover{text-decoration:underline}
+.co-head .badge{align-self:flex-start;white-space:nowrap;padding:3px 10px}.co-head{align-items:flex-start}

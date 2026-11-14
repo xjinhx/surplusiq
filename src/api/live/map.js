@@ -81,7 +81,7 @@ export function mapProposal(p, products, extra = {}) {
 }
 
 export function mapCommitment(c) {
-  return { id: `CMT-${pad(c.Id)}`, description: c.Name, category: c.IsRecurring ? `Recurring (${c.Frequency})` : 'One-off', direction: c.Direction === 'In' ? 'INFLOW' : 'OUTFLOW', amount: Number(c.Amount), dueDate: day(c.DueDate), status: 'PENDING', notes: '', createdBy: userName(c.CreatedBy), createdAt: sgt(c.CreatedOn), _raw: c }
+  return { id: `CMT-${pad(c.Id)}`, description: c.Name, category: c.IsRecurring ? `Recurring (${c.Frequency})` : 'One-off', direction: c.Direction === 'In' ? 'INFLOW' : 'OUTFLOW', amount: Number(c.Amount), dueDate: day(c.DueDate), status: 'PENDING', notes: '', createdBy: userName(c.CreatedBy), createdAt: sgt(c.CreatedOn), payeeAccountId: c.PayeeAccountId || '', oneOff: !c.IsRecurring, _raw: c }
 }
 
 export function mapTxn(t) {

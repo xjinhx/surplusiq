@@ -4,6 +4,7 @@ import App from './App.vue'
 import './styles/base.css'
 
 const routes = [
+  { path: '/companies', component: () => import('./views/CompaniesView.vue') },
   { path: '/', component: () => import('./views/DashboardView.vue') },
   { path: '/forecast', component: () => import('./views/ForecastView.vue') },
   { path: '/propose', component: () => import('./views/ProposeView.vue') },
@@ -28,5 +29,12 @@ const routes = [
   { path: '/audit', redirect: (to) => ({ path: '/activity/audit', query: to.query }) },
 ]
 const router = createRouter({ history: createWebHashHistory(), routes, scrollBehavior: () => ({ top: 0 }) })
+
+// Land on the company list once per browser session, then straight into the chosen company.
+router.beforeEach((to) => {
+  let picked = false
+  try { picked = sessionStorage.getItem('siq.picked') === '1' } catch { picked = true }
+  if (!picked && to.path !== '/companies') return '/companies'
+})
 
 createApp(App).use(router).mount('#app')

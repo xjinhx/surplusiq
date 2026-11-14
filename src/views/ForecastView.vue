@@ -134,7 +134,7 @@ const bars = (h) => h.map((m) => ({ label: monthLabel(m.month + '-01'), parts: [
         </dl>
         <div v-if="pay.r.belowBuffer" class="banner red" style="margin-top:16px"><div><b>Cash would fall {{ money(pay.r.shortfall, true) }} below the buffer</b>The payment is not blocked, but Check liquidity will then report a breach.</div></div>
         <div v-else class="banner green" style="margin-top:16px"><div><b>Cash stays above the buffer</b>{{ money(pay.r.cashAfter - pay.r.buffer, true) }} of headroom after this payment.</div></div>
-        <p class="hint" style="margin-top:12px">This moves real money in the tBank sandbox and closes the commitment.</p>
+        <p class="hint" style="margin-top:12px">This moves real money through tBank and closes the commitment.</p>
       </template>
     </template>
     <template #actions><button class="btn" @click="pay = null">Cancel</button><button class="btn primary" :disabled="pay.loading || !pay.r || !pay.r.ok || pay.paying" @click="confirmPay">{{ pay.paying ? 'Paying...' : pay.r && pay.r.ok ? `Pay ${money(pay.r.amount, true)}` : 'Pay' }}</button></template>

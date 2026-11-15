@@ -167,6 +167,8 @@ svg text { font-family: var(--font); }
 .chip { display: inline-flex; align-items: center; border: 1px solid var(--rule-strong); border-radius: 999px; padding: 2px var(--s3); font-size: 13px; font-weight: 600; color: var(--ink); }
 .tiles { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s8); }
 .tile { width: 52px; height: 52px; border: 1px solid var(--rule); border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--accent-dark); background: var(--hover); }
+.tile.logo { width: 92px; padding: 10px; background: #fff; }
+.tile.logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 .tile.more { color: var(--muted); font-weight: 500; background: transparent; }
 .card.flush > .t-head { padding: var(--s5) var(--s6); display: flex; align-items: baseline; gap: var(--s3); }
 .t-head h2 { margin: 0; font-size: 17px; } .t-head .sub { color: var(--muted); font-size: 14px; }
@@ -175,6 +177,8 @@ svg text { font-family: var(--font); }
 .unit { color: var(--muted); font-size: 12px; font-weight: 500; margin-left: 6px; }
 .inbar { display: inline-block; height: 4px; border-radius: 2px; background: var(--accent); vertical-align: middle; margin: 0 var(--s3); min-width: 3px; opacity: .75; }
 .share-cell { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); } .share-cell .p { color: var(--muted); font-size: 13px; }
+.brandtile.logo { width: 52px; height: 24px; background: transparent; }
+.brandtile.logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 .brandtile { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; background: var(--accent-soft); color: var(--accent-dark); font-size: 11px; font-weight: 700; margin-right: var(--s2); vertical-align: middle; }
 
 .card.flush table th:first-child, .card.flush table td:first-child { padding-left: var(--s6); }

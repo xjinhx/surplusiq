@@ -26,10 +26,17 @@ export const PREF_MAX = { CONSERVATIVE: 2, MODERATE: 3, GROWTH: 4 }
 
 const TYPE = { MoneyMarketFund: 'MONEY_MARKET_FUND', FixedDeposit: 'FIXED_DEPOSIT', TBill: 'T_BILL' }
 
+// Real market data that replaces the backend's placeholder rate for a product code (the backend has no update call).
+// TB6M: MAS 6-month SGS T-bill auction, issue BS26122V, cut-off yield 1.86% (auction 4 Nov 2026).
+const MARKET = {
+  TB6M: { issuer: 'Singapore Government (MAS)', rate: 1.86, rateBasis: 'Cut-off yield, 4 Nov 2026 auction, % p.a.' },
+}
+
 export function mapProduct(p) {
   const tenor = p.TenorMonths || 0
+  const m = MARKET[p.Code]
   return {
-    id: p.Code, name: p.Name, type: TYPE[p.ProductType] || snake(p.ProductType), issuer: 'Illustrative', rate: Number(p.IndicativeRate), rateBasis: 'Illustrative, % p.a.',
+    id: p.Code, name: p.Name, type: TYPE[p.ProductType] || snake(p.ProductType), issuer: m ? m.issuer : 'Illustrative', rate: m ? m.rate : Number(p.IndicativeRate), rateBasis: m ? m.rateBasis : 'Illustrative, % p.a.',
     tenorMonths: tenor || null, minInvestment: Number(p.MinInvestment), investmentStep: Number(p.InvestmentStep) || 1, liquidityDays: tenor ? tenor * 30 : 1,
     liquidityTerms: !tenor ? 'Redeemable on demand (1-2 business days)' : p.EarlyExitAllowed ? 'Locked to maturity; early withdrawal forfeits interest, full withdrawal only' : 'No early exit allowed',
     riskClass: snake(p.RiskLevel || 'Low').replace(' ', '_'), earlyExit: { allowed: !!p.EarlyExitAllowed, forfeitsInterest: !!tenor && !!p.EarlyExitAllowed, note: '' },

@@ -202,6 +202,18 @@ export const liveApi = {
     } finally { setUen(prev, false) }
     return out
   },
+  // Linked bank accounts (SIQ_BankConnection). Linking stores the row; balances come from SIQ_CashPosition.
+  async getBankConnections() {
+    return (await get('bankconn', 'GetBankConnections', { UEN })).map((b) => ({ id: b.Id, bankName: b.BankName, bic: b.BIC, bankId: b.BankId, tenantId: b.TenantId, customerId: b.CustomerId, accountId: b.PrimaryAccountId, isPrimary: !!b.IsPrimary, isActive: !!b.IsActive, _raw: b }))
+  },
+  async addBankConnection(p) {
+    const r = await post('bankconn', 'AddBankConnection', null, { BankName: p.bankName.trim(), UEN, TenantId: Number(p.tenantId), BankId: Number(p.bankId), BIC: p.bic.trim().toUpperCase(), CustomerId: p.customerId.trim(), PrimaryAccountId: p.accountId.trim(), IsPrimary: !!p.isPrimary, IsActive: true, Id: 0 })
+    if (!r || r.Success === false) throw new ApiError((r && r.Message) || 'Could not link the account', 'ADD_FAILED')
+    return r
+  },
+  async setBankConnectionActive({ raw, active }) {
+    await put('bankconn', 'UpdateBankConnection', { ...raw, IsActive: active })
+  },
   async getUsers() { return Promise.all(USERS.map(async (u) => { const r = await roleOf(u); return { id: u.id, name: r.name, title: u.title, role: r.role, email: u.email } })) },
   async getUserRole({ userId } = {}) { const u = USERS.find((x) => x.id === (userId || session.userId)) || USERS[0]; const r = await roleOf(u); return { userId: u.id, name: r.name, role: r.role, uen: UEN, company: 'Kopi & Co Pte Ltd' } },
 

@@ -35,5 +35,6 @@ export const MODULES = {
   rec: ['SIQ_AllocationRecommendation', 'AllocationRecommendation'], seed: ['SIQ_SeedTransaction', 'SeedTransaction'],
   cash: ['SIQ_CashPosition', 'CashPosition'], forecast: ['SIQ_Forecast', 'Forecast'], alloc: ['SIQ_AllocationEngine', 'AllocationAPI'],
   workflow: ['SIQ_ProposalWorkflow', 'ProposalWorkflow'],
+  bankconn: ['SIQ_BankConnection', 'BankConnectionAPI'],
   payment: ['SIQ_Payment', 'Payment'], monitor: ['SIQ_Monitor', 'Monitor'],
 }
